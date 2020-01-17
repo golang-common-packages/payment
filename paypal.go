@@ -11,7 +11,7 @@ type PaypalClient struct {
 	client *paypal.Client
 }
 
-func NewPaypalClient(clientID, secretID string) IMailClient {
+func NewPaypalClient(clientID, secretID string) *PaypalClient {
 	currentSesstion := &PaypalClient{nil}
 
 	client, err := paypal.NewClient("clientID", "secretID", paypal.APIBaseSandBox)
