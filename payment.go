@@ -23,4 +23,6 @@ func NewPayment(paymentProvider int, config *Config) IPayment {
 	case STRIPE:
 		return NewStripe(config.SecretID)
 	}
+
+	return nil
 }
