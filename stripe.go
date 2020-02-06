@@ -8,11 +8,12 @@ import (
 	"github.com/stripe/stripe-go/paymentsource"
 	"github.com/stripe/stripe-go/topup"
 	"github.com/stripe/stripe-go/transfer"
+	"strconv"
 )
 
 type StripeClient struct{}
 
-func NewStripeClient(apiKey string) *StripeClient {
+func NewStripe(apiKey string) IPayment {
 	currentSesstion := &StripeClient{}
 	stripe.Key = apiKey
 	return currentSesstion
@@ -63,11 +64,21 @@ func (s *StripeClient) CancelPendingTopUp(topUpID string) (*stripe.Topup, error)
 	return result, err
 }
 
-func (s *StripeClient) Transfer(amount int64, typeCurrentcy stripe.Currency, method, description string) (*stripe.Transfer, error) {
+// TransferMoney method based on transferMoney function and implement IPayment interface
+func (s *StripeClient) TransferMoney(transferInfo *MoneyTransfer) (result interface{}, err error) {
+	amount, err := strconv.ParseInt(transferInfo.Amount, 10, 32)
+	if err != nil {
+		return
+	}
+	return transferMoney(amount, stripe.Currency(transferInfo.CurrencyType), transferInfo.TransferMethod, transferInfo.Recipient, transferInfo.Comment)
+}
+
+func transferMoney(amount int64, typeCurrentcy stripe.Currency, method, destination, description string) (*stripe.Transfer, error) {
 	params := &stripe.TransferParams{
 		Amount:      stripe.Int64(amount),
 		Currency:    stripe.String(string(typeCurrentcy)),
-		Destination: stripe.String(description),
+		Destination: stripe.String(destination),
+		Description: stripe.String(description),
 		SourceType:  &method,
 	}
 	detail, err := transfer.New(params)

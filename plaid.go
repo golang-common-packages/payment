@@ -3,6 +3,7 @@ package payment
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/plaid/plaid-go/plaid"
 )
@@ -13,7 +14,7 @@ type PlaidClient struct {
 }
 
 // NewPlaid ...
-func NewPlaid(clientID, secretKey, publicKey string) *PlaidClient {
+func NewPlaid(clientID, secretKey, publicKey string) IPayment {
 	currentSesstion := &PlaidClient{nil}
 
 	clientOptions := plaid.ClientOptions{
@@ -80,16 +81,29 @@ func (p *PlaidClient) GetBalances(accessToken string) (result plaid.GetBalancesR
 	return p.client.GetBalances(accessToken)
 }
 
-// SendToPlaidAccount ...
-func (p *PlaidClient) SendToPlaidAccount(recipientID, reference, moneyType string, amount float64) (result plaid.CreatePaymentResponse, err error) {
+// TransferMoney method based on sendToPlaidAccount and SendToAddress function and implement IPayment interface
+func (p *PlaidClient) TransferMoney(transferInfo *MoneyTransfer) (result interface{}, err error) {
+	amount, err := strconv.ParseFloat(transferInfo.Amount, 64)
+	if err != nil {
+		return
+	}
+
+	if transferInfo.TransferMethod == "account" {
+		return sendToPlaidAccount(p, transferInfo.Recipient, transferInfo.Comment, transferInfo.CurrencyType, amount)
+	}
+	return sendToInternationalBank(p, transferInfo.Address.Street, transferInfo.Address.City, transferInfo.Address.PostalCode, transferInfo.Address.Country, transferInfo.Recipient, transferInfo.RecipientIBAN, transferInfo.Comment, transferInfo.CurrencyType, amount)
+}
+
+// sendToPlaidAccount ...
+func sendToPlaidAccount(p *PlaidClient, recipientID, reference, moneyType string, amount float64) (result plaid.CreatePaymentResponse, err error) {
 	return p.client.CreatePayment(recipientID, reference, plaid.PaymentAmount{
 		Currency: moneyType,
 		Value:    amount,
 	})
 }
 
-// SendToAddress ...
-func (p *PlaidClient) SendToAddress(street, city, postalCode, country, recipientName, iban, reference, moneyType string, amount float64) (result plaid.CreatePaymentResponse, err error) {
+// sendToInternationalBank ...
+func sendToInternationalBank(p *PlaidClient, street, city, postalCode, country, recipientName, iban, reference, moneyType string, amount float64) (result plaid.CreatePaymentResponse, err error) {
 	paymentRecipientResponse, err := p.client.CreatePaymentRecipient(recipientName, iban, plaid.PaymentRecipientAddress{
 		Street:     []string{street},
 		City:       city,
@@ -104,7 +118,7 @@ func (p *PlaidClient) SendToAddress(street, city, postalCode, country, recipient
 		}, err
 	}
 
-	return p.SendToPlaidAccount(paymentRecipientResponse.RecipientID, reference, moneyType, amount)
+	return sendToPlaidAccount(p, paymentRecipientResponse.RecipientID, reference, moneyType, amount)
 }
 
 // RegistryRecipientFromAddress ...

@@ -16,7 +16,7 @@ type PaypalClient struct {
 }
 
 // NewPaypal ...
-func NewPaypal(clientID, secretID string) *PaypalClient {
+func NewPaypal(clientID, secretID string) IPayment {
 	currentSesstion := &PaypalClient{nil, nil}
 
 	client, err := paypal.NewClient("clientID", "secretID", paypal.APIBaseLive)
@@ -63,8 +63,13 @@ func (pp *PaypalClient) SetLog(log io.Writer) {
 	pp.client.SetLog(log)
 }
 
-// SubmitPayment ...
-func (pp *PaypalClient) SubmitPayment(emailSubject, recipientType, receiver, amount, currencyType, sendingNote string) (result *paypal.PayoutResponse, err error) {
+// TransferMoney method based on submitPayment function and implement IPayment interface
+func (pp *PaypalClient) TransferMoney(transferInfo *MoneyTransfer) (result interface{}, err error) {
+	return submitPayment(pp, transferInfo.EmailSubject, transferInfo.TransferMethod, transferInfo.Recipient, transferInfo.Amount, transferInfo.CurrencyType, transferInfo.Comment)
+}
+
+// submitPayment ...
+func submitPayment(pp *PaypalClient, emailSubject, recipientType, receiver, amount, currencyType, sendingNote string) (result *paypal.PayoutResponse, err error) {
 	payout := paypal.Payout{
 		SenderBatchHeader: &paypal.SenderBatchHeader{
 			EmailSubject: emailSubject,
