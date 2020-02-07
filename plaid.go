@@ -121,8 +121,22 @@ func sendToInternationalBank(p *PlaidClient, street, city, postalCode, country, 
 	return sendToPlaidAccount(p, paymentRecipientResponse.RecipientID, reference, moneyType, amount)
 }
 
-// RegistryRecipientFromAddress ...
-func (p *PlaidClient) RegistryRecipientFromAddress(street, city, postalCode, country, recipientName, iban string) (result plaid.CreatePaymentRecipientResponse, err error) {
+func (p *PlaidClient) LinkBankAccount(info BankAccount) error {
+	_, err := p.client.CreatePaymentRecipient(info.LinkToPlaid.RecipientName, info.LinkToPlaid.InternationalBankAccountNumber, plaid.PaymentRecipientAddress{
+		Street:     []string{info.LinkToPlaid.Street},
+		City:       info.LinkToPlaid.City,
+		PostalCode: info.LinkToPlaid.PostalCode,
+		Country:    info.LinkToPlaid.Country,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// registryRecipientFromIBAN ...
+func registryRecipientFromIBAN(p *PlaidClient, street, city, postalCode, country, recipientName, iban string) (result plaid.CreatePaymentRecipientResponse, err error) {
 	return p.client.CreatePaymentRecipient(recipientName, iban, plaid.PaymentRecipientAddress{
 		Street:     []string{street},
 		City:       city,

@@ -75,7 +75,7 @@ func submitPayment(pp *PaypalClient, emailSubject, recipientType, receiver, amou
 			EmailSubject: emailSubject,
 		},
 		Items: []paypal.PayoutItem{
-			paypal.PayoutItem{
+			{
 				RecipientType: recipientType,
 				Receiver:      receiver,
 				Amount: &paypal.AmountPayout{
@@ -95,23 +95,33 @@ func submitPayment(pp *PaypalClient, emailSubject, recipientType, receiver, amou
 	return payoutResp, nil
 }
 
-// ConvertRequestToJSON ...
-func (pp *PaypalClient) ConvertRequestToJSON(method, url string, payload interface{}) (httpClient *http.Request, err error) {
+// LinkBankAccount documents: https://developer.paypal.com/docs/archive/adaptive-accounts/api/add-bank-account/
+func (pp *PaypalClient) LinkBankAccount(info BankAccount) error {
+	httpRequest, err := convertRequestToJSON(pp, "POST", "", info)
+	if err != nil {
+		return err
+	}
+
+	return sendRequestWithBaseAuth(pp, httpRequest, info.LinkToPayPal)
+}
+
+// convertRequestToJSON ...
+func convertRequestToJSON(pp *PaypalClient, method, url string, payload interface{}) (httpClient *http.Request, err error) {
 	return pp.client.NewRequest(method, url, payload)
 }
 
-// SendRequest ...
-func (pp *PaypalClient) SendRequest(req *http.Request, value interface{}) error {
+// sendRequest ...
+func sendRequest(pp *PaypalClient, req *http.Request, value interface{}) error {
 	return pp.client.Send(req, value)
 }
 
-// SendRequestWithAuth ...
-func (pp *PaypalClient) SendRequestWithAuth(req *http.Request, value interface{}) error {
+// sendRequestWithAuth ...
+func sendRequestWithAuth(pp *PaypalClient, req *http.Request, value interface{}) error {
 	return pp.client.SendWithAuth(req, value)
 }
 
-// SendRequestWithBaseAuth ...
-func (pp *PaypalClient) SendRequestWithBaseAuth(req *http.Request, value interface{}) error {
+// sendRequestWithBaseAuth ...
+func sendRequestWithBaseAuth(pp *PaypalClient, req *http.Request, value interface{}) error {
 	return pp.client.SendWithBasicAuth(req, value)
 }
 

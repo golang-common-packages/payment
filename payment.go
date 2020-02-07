@@ -4,6 +4,7 @@ import "context"
 
 type IPayment interface {
 	TransferMoney(transferInfo *MoneyTransfer) (result interface{}, err error)
+	LinkBankAccount(info BankAccount) error
 }
 
 var ctx = context.Background()

@@ -108,7 +108,16 @@ func (s *StripeClient) ListTransfers(searchType, option, value string) *transfer
 	return result
 }
 
-func (s *StripeClient) addBankAccount(customerID, token, accountHolderName, accountHolderType, accountNumber, country, currency string) (*stripe.BankAccount, error) {
+func (s *StripeClient) LinkBankAccount(info BankAccount) error {
+	_, err := addBankAccount(s, info.LinkToStripe.CustomerID, info.LinkToStripe.Token, info.LinkToStripe.AccountHolderName, info.LinkToStripe.AccountHolderType, info.LinkToStripe.AccountNumber, info.LinkToStripe.Country, info.LinkToStripe.Currency)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func addBankAccount(s *StripeClient, customerID, token, accountHolderName, accountHolderType, accountNumber, country, currency string) (*stripe.BankAccount, error) {
 	params := &stripe.BankAccountParams{
 		AccountHolderName: stripe.String(accountHolderName),
 		AccountHolderType: stripe.String(accountHolderType),
