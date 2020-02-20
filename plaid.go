@@ -33,6 +33,7 @@ func NewPlaid(clientID, secretKey, publicKey string) *PlaidClient {
 	}
 
 	currentClient.client = client
+	log.Println("Init Plaid service success")
 
 	return currentClient
 }

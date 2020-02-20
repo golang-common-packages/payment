@@ -11,14 +11,18 @@ type Config struct {
 }
 
 type MoneyTransfer struct {
-	RecipientIBAN  string `json:"recipientIBAN,omitempty"`
-	Recipient      string `json:"recipient,omitempty"`
-	TransferMethod string `json:"transferMethod,omitempty"`
-	Amount         string `json:"amount,omitempty"`
-	CurrencyType   string `json:"currencyType,omitempty"`
-	Comment        string `json:"comment,omitempty"`
-	EmailSubject   string `json:"emailSubject,omitempty"`
-	Address        `json:"address,omitempty"`
+	ReceiverIBAN string                    `json:"recipientIBAN,omitempty"`
+	Receiver     string                    `json:"recipient,omitempty"`      /// PayPal
+	ReceiverType string                    `json:"transferMethod,omitempty"` /// PayPal
+	Amount       `json:"amount,omitempty"` /// PayPal
+	Comment      string                    `json:"comment,omitempty"`      /// PayPal
+	EmailSubject string                    `json:"emailSubject,omitempty"` /// PayPal
+	Address      `json:"address,omitempty"`
+}
+
+type Amount struct {
+	Value    string `json:"amount,omitempty"`
+	Currency string `json:"currencyType,omitempty"`
 }
 
 type Address struct {
@@ -28,13 +32,7 @@ type Address struct {
 	Country    string `json:"country,omitempty"`
 }
 
-type BankAccount struct {
-	LinkToPayPal LinkToPayPal `json:"linkToPayPal,omitempty"`
-	LinkToPlaid  LinkToPlaid  `json:"linkToPlaid,omitempty"`
-	LinkToStripe LinkToStripe `json:"linkToStripe,omitempty"`
-}
-
-type LinkToPayPal struct {
+type PayPalLinkBank struct {
 	BankAccountNumber              string `json:"bankAccountNumber,omitempty"`
 	InternationalBankAccountNumber string `json:"iban,omitempty"`
 	BankAccountType                string `json:"bankAccountType,omitempty"`
@@ -44,21 +42,17 @@ type LinkToPayPal struct {
 	ConfirmationType               string `json:"confirmationType,omitempty"`
 }
 
-type LinkToPlaid struct {
-	RecipientName                  string `json:"recipientName,omitempty"`
-	InternationalBankAccountNumber string `json:"iban,omitempty"`
-	Address                        `json:"address,omitempty"`
-}
-
-type LinkToStripe struct {
+type StripeLinkBank struct {
 	CustomerID        string `json:"customerID,omitempty"`
-	Token             string `json:"token,omitempty"`
+	Token             string `json:"auth,omitempty"`
 	AccountHolderName string `json:"accountHolderName,omitempty"`
 	AccountHolderType string `json:"accountHolderType,omitempty"`
 	AccountNumber     string `json:"accountNumber,omitempty"`
 	Country           string `json:"country,omitempty"`
 	Currency          string `json:"currency,omitempty"`
 }
+
+///// Plaid models /////
 
 type PlaidTransactionsHistory struct {
 	Accounts     []plaid.Account     `json:"Accounts,omitempty"`

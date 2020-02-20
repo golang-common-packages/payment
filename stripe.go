@@ -13,7 +13,7 @@ import (
 
 type StripeClient struct{}
 
-func NewStripe(apiKey string) IPayment {
+func NewStripe(apiKey string) *StripeClient {
 	currentSesstion := &StripeClient{}
 	stripe.Key = apiKey
 	return currentSesstion
@@ -66,11 +66,11 @@ func (s *StripeClient) CancelPendingTopUp(topUpID string) (*stripe.Topup, error)
 
 // TransferMoney method based on transferMoney function and implement IPayment interface
 func (s *StripeClient) TransferMoney(transferInfo *MoneyTransfer) (result interface{}, err error) {
-	amount, err := strconv.ParseInt(transferInfo.Amount, 10, 32)
+	amount, err := strconv.ParseInt(transferInfo.Value, 10, 32)
 	if err != nil {
 		return
 	}
-	return transferMoney(amount, stripe.Currency(transferInfo.CurrencyType), transferInfo.TransferMethod, transferInfo.Recipient, transferInfo.Comment)
+	return transferMoney(amount, stripe.Currency(transferInfo.Currency), transferInfo.ReceiverType, transferInfo.Receiver, transferInfo.Comment)
 }
 
 func transferMoney(amount int64, typeCurrentcy stripe.Currency, method, destination, description string) (*stripe.Transfer, error) {
