@@ -12,10 +12,10 @@ import (
 
 type StripeClient struct{}
 
-func NewStripeClient(apiKey string) *StripeClient {
-	currentSesstion := &StripeClient{}
+func NewStripe(apiKey string) *StripeClient {
+	currentSession := &StripeClient{}
 	stripe.Key = apiKey
-	return currentSesstion
+	return currentSession
 }
 
 func (s *StripeClient) RetrieveBalance() (*stripe.Balance, error) {
@@ -23,10 +23,14 @@ func (s *StripeClient) RetrieveBalance() (*stripe.Balance, error) {
 	return accountBalance, err
 }
 
-func (s *StripeClient) TopUpStripeBalance(amount int64, typeCurrentcy stripe.Currency, description string) (*stripe.Topup, error) {
+func (s *StripeClient) TopUpStripeBalance(
+	amount int64,
+	typeCurrency stripe.Currency,
+	description string) (*stripe.Topup, error) {
+
 	params := &stripe.TopupParams{
 		Amount:              stripe.Int64(amount),
-		Currency:            stripe.String(string(typeCurrentcy)),
+		Currency:            stripe.String(string(typeCurrency)),
 		Description:         stripe.String(description),
 		StatementDescriptor: stripe.String("Top-up"),
 	}
@@ -35,13 +39,19 @@ func (s *StripeClient) TopUpStripeBalance(amount int64, typeCurrentcy stripe.Cur
 	return result, err
 }
 
-func (s *StripeClient) GetTopUpDetail(topUpID string) (*stripe.Topup, error) {
+func (s *StripeClient) GetTopUpDetail(
+	topUpID string) (*stripe.Topup, error) {
+
 	detail, err := topup.Get(topUpID, nil)
 
 	return detail, err
 }
 
-func (s *StripeClient) AddTopUpMetadata(topUpID, key, value string) (*stripe.Topup, error) {
+func (s *StripeClient) AddTopUpMetadata(
+	topUpID,
+	key,
+	value string) (*stripe.Topup, error) {
+
 	params := &stripe.TopupParams{}
 	params.AddMetadata(key, value)
 	result, err := topup.Update(topUpID, params)
@@ -49,7 +59,11 @@ func (s *StripeClient) AddTopUpMetadata(topUpID, key, value string) (*stripe.Top
 	return result, err
 }
 
-func (s *StripeClient) ListTopUps(searchType, option, value string) *topup.Iter {
+func (s *StripeClient) ListTopUps(
+	searchType,
+	option,
+	value string) *topup.Iter {
+
 	params := &stripe.TopupListParams{}
 	params.Filters.AddFilter(searchType, option, value)
 	result := topup.List(params)
@@ -57,17 +71,26 @@ func (s *StripeClient) ListTopUps(searchType, option, value string) *topup.Iter 
 	return result
 }
 
-func (s *StripeClient) CancelPendingTopUp(topUpID string) (*stripe.Topup, error) {
-	result, err := topup.Cancel("tu_123456789", nil)
+func (s *StripeClient) CancelPendingTopUp(
+	topUpID string) (*stripe.Topup, error) {
+
+	result, err := topup.Cancel(topUpID, nil)
 
 	return result, err
 }
 
-func (s *StripeClient) Transfer(amount int64, typeCurrentcy stripe.Currency, method, description string) (*stripe.Transfer, error) {
+func (s *StripeClient) TransferMoney(
+	amount int64,
+	typeCurrency stripe.Currency,
+	method,
+	destination,
+	description string) (*stripe.Transfer, error) {
+
 	params := &stripe.TransferParams{
 		Amount:      stripe.Int64(amount),
-		Currency:    stripe.String(string(typeCurrentcy)),
-		Destination: stripe.String(description),
+		Currency:    stripe.String(string(typeCurrency)),
+		Destination: stripe.String(destination),
+		Description: stripe.String(description),
 		SourceType:  &method,
 	}
 	detail, err := transfer.New(params)
@@ -75,13 +98,19 @@ func (s *StripeClient) Transfer(amount int64, typeCurrentcy stripe.Currency, met
 	return detail, err
 }
 
-func (s *StripeClient) GetTransferDetail(transferID string) (*stripe.Transfer, error) {
+func (s *StripeClient) GetTransferDetail(
+	transferID string) (*stripe.Transfer, error) {
+
 	detail, err := transfer.Get(transferID, nil)
 
 	return detail, err
 }
 
-func (s *StripeClient) AddTransferMetadata(transferID, key, value string) (*stripe.Transfer, error) {
+func (s *StripeClient) AddTransferMetadata(
+	transferID,
+	key,
+	value string) (*stripe.Transfer, error) {
+
 	params := &stripe.TransferParams{}
 	params.AddMetadata(key, value)
 	result, err := transfer.Update(transferID, params)
@@ -89,7 +118,11 @@ func (s *StripeClient) AddTransferMetadata(transferID, key, value string) (*stri
 	return result, err
 }
 
-func (s *StripeClient) ListTransfers(searchType, option, value string) *transfer.Iter {
+func (s *StripeClient) ListTransfers(
+	searchType,
+	option,
+	value string) *transfer.Iter {
+
 	params := &stripe.TransferListParams{}
 	params.Filters.AddFilter(searchType, option, value)
 	result := transfer.List(params)
@@ -97,7 +130,15 @@ func (s *StripeClient) ListTransfers(searchType, option, value string) *transfer
 	return result
 }
 
-func (s *StripeClient) addBankAccount(customerID, token, accountHolderName, accountHolderType, accountNumber, country, currency string) (*stripe.BankAccount, error) {
+func (s *StripeClient) AddBankAccount(
+	customerID,
+	token,
+	accountHolderName,
+	accountHolderType,
+	accountNumber,
+	country,
+	currency string) (*stripe.BankAccount, error) {
+
 	params := &stripe.BankAccountParams{
 		AccountHolderName: stripe.String(accountHolderName),
 		AccountHolderType: stripe.String(accountHolderType),
@@ -112,7 +153,10 @@ func (s *StripeClient) addBankAccount(customerID, token, accountHolderName, acco
 	return result, err
 }
 
-func (s *StripeClient) RetrieveBankAccount(customerID, bankID string) (*stripe.BankAccount, error) {
+func (s *StripeClient) RetrieveBankAccount(
+	customerID,
+	bankID string) (*stripe.BankAccount, error) {
+
 	params := &stripe.BankAccountParams{
 		Customer: stripe.String(customerID),
 	}
@@ -124,7 +168,12 @@ func (s *StripeClient) RetrieveBankAccount(customerID, bankID string) (*stripe.B
 	return result, err
 }
 
-func (s *StripeClient) AddBankAccountMetadata(customerID, bankID, key, value string) (*stripe.BankAccount, error) {
+func (s *StripeClient) AddBankAccountMetadata(
+	customerID,
+	bankID,
+	key,
+	value string) (*stripe.BankAccount, error) {
+
 	params := &stripe.BankAccountParams{
 		Customer: stripe.String(customerID),
 	}
@@ -137,7 +186,11 @@ func (s *StripeClient) AddBankAccountMetadata(customerID, bankID, key, value str
 	return result, err
 }
 
-func (s *StripeClient) VerifyBankAccount(customerID, bankID string, amounts [2]int64) (*stripe.PaymentSource, error) {
+func (s *StripeClient) VerifyBankAccount(
+	customerID,
+	bankID string,
+	amounts [2]int64) (*stripe.PaymentSource, error) {
+
 	params := &stripe.SourceVerifyParams{
 		Amounts:  amounts,
 		Customer: stripe.String(customerID),
@@ -147,7 +200,10 @@ func (s *StripeClient) VerifyBankAccount(customerID, bankID string, amounts [2]i
 	return result, err
 }
 
-func (s *StripeClient) RemoveBankAccount(customerID, bankID string) (*stripe.BankAccount, error) {
+func (s *StripeClient) RemoveBankAccount(
+	customerID,
+	bankID string) (*stripe.BankAccount, error) {
+
 	params := &stripe.BankAccountParams{
 		Customer: stripe.String(customerID),
 	}
@@ -159,7 +215,12 @@ func (s *StripeClient) RemoveBankAccount(customerID, bankID string) (*stripe.Ban
 	return result, err
 }
 
-func (s *StripeClient) ListBankAccounts(customerID, searchType, option, value string) *bankaccount.Iter {
+func (s *StripeClient) ListBankAccounts(
+	customerID,
+	searchType,
+	option,
+	value string) *bankaccount.Iter {
+
 	params := &stripe.BankAccountListParams{
 		Customer: stripe.String(customerID),
 	}
@@ -169,7 +230,12 @@ func (s *StripeClient) ListBankAccounts(customerID, searchType, option, value st
 	return result
 }
 
-func (s *StripeClient) CreatePayment(cardNumber, expMonth, expYear, cvc string) (*stripe.PaymentMethod, error) {
+func (s *StripeClient) CreatePayment(
+	cardNumber,
+	expMonth,
+	expYear,
+	cvc string) (*stripe.PaymentMethod, error) {
+
 	params := &stripe.PaymentMethodParams{
 		Type: stripe.String("card"),
 		Card: &stripe.PaymentMethodCardParams{
@@ -184,7 +250,9 @@ func (s *StripeClient) CreatePayment(cardNumber, expMonth, expYear, cvc string) 
 	return result, err
 }
 
-func (s *StripeClient) RetrievePayment(paymentID string) (*stripe.PaymentMethod, error) {
+func (s *StripeClient) RetrievePayment(
+	paymentID string) (*stripe.PaymentMethod, error) {
+
 	result, err := paymentmethod.Get(
 		paymentID,
 		nil,
@@ -193,7 +261,11 @@ func (s *StripeClient) RetrievePayment(paymentID string) (*stripe.PaymentMethod,
 	return result, err
 }
 
-func (s *StripeClient) AddPaymentMetadata(paymentID, key, value string) (*stripe.PaymentMethod, error) {
+func (s *StripeClient) AddPaymentMetadata(
+	paymentID,
+	key,
+	value string) (*stripe.PaymentMethod, error) {
+
 	params := &stripe.PaymentMethodParams{}
 	params.AddMetadata(key, value)
 	result, err := paymentmethod.Update(
@@ -204,7 +276,10 @@ func (s *StripeClient) AddPaymentMetadata(paymentID, key, value string) (*stripe
 	return result, err
 }
 
-func (s *StripeClient) ListPaymentByCustermerID(customerID, paymentType string) *paymentmethod.Iter {
+func (s *StripeClient) ListPaymentByCustomerID(
+	customerID,
+	paymentType string) *paymentmethod.Iter {
+
 	params := &stripe.PaymentMethodListParams{
 		Customer: stripe.String(customerID),
 		Type:     stripe.String(paymentType),
@@ -214,7 +289,10 @@ func (s *StripeClient) ListPaymentByCustermerID(customerID, paymentType string) 
 	return detail
 }
 
-func (s *StripeClient) AttachPaymentToCustomer(customerID, paymentID string) (*stripe.PaymentMethod, error) {
+func (s *StripeClient) AttachPaymentToCustomer(
+	customerID,
+	paymentID string) (*stripe.PaymentMethod, error) {
+
 	params := &stripe.PaymentMethodAttachParams{
 		Customer: stripe.String(customerID),
 	}
@@ -226,7 +304,10 @@ func (s *StripeClient) AttachPaymentToCustomer(customerID, paymentID string) (*s
 	return result, err
 }
 
-func (s *StripeClient) DetachPaymentFromCustomer(customerID, paymentID string) (*stripe.PaymentMethod, error) {
+func (s *StripeClient) DetachPaymentFromCustomer(
+	customerID,
+	paymentID string) (*stripe.PaymentMethod, error) {
+
 	params := &stripe.PaymentMethodAttachParams{
 		Customer: stripe.String(customerID),
 	}

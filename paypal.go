@@ -9,75 +9,67 @@ import (
 	"github.com/plutov/paypal/v3"
 )
 
-// PaypalClient ...
+// PaypalClient model for PayPal instance
 type PaypalClient struct {
 	client *paypal.Client
-	token  *paypal.TokenResponse
+	auth   *paypal.TokenResponse
 }
 
-// NewPaypal ...
+// NewPaypal return new PayPal instance
 func NewPaypal(clientID, secretID string) *PaypalClient {
-	currentSesstion := &PaypalClient{nil, nil}
+	currentClient := &PaypalClient{nil, nil}
 
 	client, err := paypal.NewClient("clientID", "secretID", paypal.APIBaseLive)
 	if err != nil {
-		log.Println("Error when init paypal client: ", err)
+		log.Println("Can not init PayPal client: ", err)
 		panic(err)
 	}
 	client.SetLog(os.Stdout) // Set log to terminal stdout
 
-	tokenResult, err := client.GetAccessToken()
+	result, err := client.GetAccessToken()
 	if err != nil {
-		log.Println("Error when get paypal token: ", err)
+		log.Println("Can not get access token: ", err)
 		panic(err)
 	}
 
-	currentSesstion.client = client
-	currentSesstion.token = tokenResult
+	currentClient.client = client
+	currentClient.auth = result
+	log.Println("Init PayPal service success")
 
-	return currentSesstion
+	return currentClient
 }
 
-// GetAccessTokenFromAuthCode ...
-func (pp *PaypalClient) GetAccessTokenFromAuthCode(code, redirectURL string) (result *paypal.TokenResponse, err error) {
-	return pp.client.GrantNewAccessTokenFromAuthCode(code, redirectURL)
-}
-
-// GetAccessTokenFromRefreshToken ...
-func (pp *PaypalClient) GetAccessTokenFromRefreshToken(refreshToken string) (result *paypal.TokenResponse, err error) {
-	return pp.client.GrantNewAccessTokenFromRefreshToken(refreshToken)
-}
-
-// SetAccessToken ...
+// SetAccessToken set new access token to current PayPal client
 func (pp *PaypalClient) SetAccessToken(accessToken string) {
 	pp.client.SetAccessToken(accessToken)
 }
 
-// SetHTTPClient ...
+// SetHTTPClient set new HTTP client to current PayPal client
 func (pp *PaypalClient) SetHTTPClient(httpClient *http.Client) {
 	pp.client.SetHTTPClient(httpClient)
 }
 
-// SetLog ...
+// SetLog  set new log service to current PayPal client
 func (pp *PaypalClient) SetLog(log io.Writer) {
 	pp.client.SetLog(log)
 }
 
-// SubmitPayment ...
-func (pp *PaypalClient) SubmitPayment(emailSubject, recipientType, receiver, amount, currencyType, sendingNote string) (result *paypal.PayoutResponse, err error) {
+// https://developer.paypal.com/docs/payouts/
+// TransferMoney to send money to multiple people at the same time
+func (pp *PaypalClient) TransferMoney(transferInfo *MoneyTransfer) (result interface{}, err error) {
 	payout := paypal.Payout{
 		SenderBatchHeader: &paypal.SenderBatchHeader{
-			EmailSubject: emailSubject,
+			EmailSubject: transferInfo.EmailSubject,
 		},
 		Items: []paypal.PayoutItem{
-			paypal.PayoutItem{
-				RecipientType: recipientType,
-				Receiver:      receiver,
+			{
+				RecipientType: transferInfo.ReceiverType,
+				Receiver:      transferInfo.Receiver,
 				Amount: &paypal.AmountPayout{
-					Value:    amount,
-					Currency: currencyType,
+					Value:    transferInfo.Value,
+					Currency: transferInfo.Currency,
 				},
-				Note: sendingNote,
+				Note: transferInfo.Comment,
 			},
 		},
 	}
@@ -90,47 +82,29 @@ func (pp *PaypalClient) SubmitPayment(emailSubject, recipientType, receiver, amo
 	return payoutResp, nil
 }
 
-// ConvertRequestToJSON ...
-func (pp *PaypalClient) ConvertRequestToJSON(method, url string, payload interface{}) (httpClient *http.Request, err error) {
-	return pp.client.NewRequest(method, url, payload)
+// https://developer.paypal.com/docs/archive/adaptive-accounts/api/add-bank-account/
+// LinkBankAccount to current user
+func (pp *PaypalClient) LinkBankAccount(linkToPayPal PayPalLinkBank) (interface{}, error) {
+	httpRequest, err := convertPayPalRequestToJSON(pp, "POST", "", linkToPayPal)
+	if err != nil {
+		return nil, err
+	}
+
+	var result interface{}
+	err = pp.client.SendWithBasicAuth(httpRequest, result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
-// SendRequest ...
-func (pp *PaypalClient) SendRequest(req *http.Request, value interface{}) error {
-	return pp.client.Send(req, value)
+// StoreCreditCard to PalPay system based on current user
+func (pp *PaypalClient) StoreCreditCard(creditCardInfo paypal.CreditCard) (result *paypal.CreditCard, err error) {
+	return pp.client.StoreCreditCard(creditCardInfo)
 }
 
-// SendRequestWithAuth ...
-func (pp *PaypalClient) SendRequestWithAuth(req *http.Request, value interface{}) error {
-	return pp.client.SendWithAuth(req, value)
-}
-
-// SendRequestWithBaseAuth ...
-func (pp *PaypalClient) SendRequestWithBaseAuth(req *http.Request, value interface{}) error {
-	return pp.client.SendWithBasicAuth(req, value)
-}
-
-// CreateBillingAgreement ...
-func (pp *PaypalClient) CreateBillingAgreement(bill paypal.BillingAgreement) (result *paypal.CreateAgreementResp, err error) {
-	return pp.client.CreateBillingAgreement(bill)
-}
-
-// CreateBillingPlan ...
-func (pp *PaypalClient) CreateBillingPlan(bill paypal.BillingPlan) (result *paypal.CreateBillingResp, err error) {
-	return pp.client.CreateBillingPlan(bill)
-}
-
-// GetPayment ...
-func (pp *PaypalClient) GetPayment(payoutBatchID string) (result *paypal.PayoutResponse, err error) {
-	return pp.client.GetPayout(payoutBatchID)
-}
-
-// GetPaymentItem ...
-func (pp *PaypalClient) GetPaymentItem(payoutBatchID string) (result *paypal.PayoutItemResponse, err error) {
-	return pp.client.GetPayoutItem(payoutBatchID)
-}
-
-// ListCreditCards ...
+// ListCreditCards belong to current user
 func (pp *PaypalClient) ListCreditCards(page, pageSize int) (result *paypal.CreditCards, err error) {
 	creditCardFilter := &paypal.CreditCardsFilter{
 		PageSize: pageSize,
@@ -140,59 +114,19 @@ func (pp *PaypalClient) ListCreditCards(page, pageSize int) (result *paypal.Cred
 	return pp.client.GetCreditCards(creditCardFilter)
 }
 
-// GetCreditCardDetail ...
+// GetCreditCardDetail belong to current user by creditCardID
 func (pp *PaypalClient) GetCreditCardDetail(creditCardID string) (result *paypal.CreditCard, err error) {
 	return pp.client.GetCreditCard(creditCardID)
 }
 
-// StoreCreditCardDetail ...
-func (pp *PaypalClient) StoreCreditCardDetail(line1, line2, city, countryCode, postalCode, state, phone, id, payerID, externalCustomerID, number, typeCard, expireMonth, expireYear, cvv2, firstName, lastName, State, ValidUntil string) (result *paypal.CreditCard, err error) {
-	billingAddress := generateAddress(line1, line2, city, countryCode, postalCode, state, phone)
-	creditCard := generateCreditDetail(id, payerID, externalCustomerID, number, typeCard, expireMonth, expireYear, cvv2, firstName, lastName, State, ValidUntil, billingAddress)
-
-	return pp.client.StoreCreditCard(creditCard)
+// RemoveCreditCard out of current user
+func (pp *PaypalClient) RemoveCreditCard(creditCardID string) (err error) {
+	return pp.client.DeleteCreditCard(creditCardID)
 }
 
-// RemoveCreditCardDetail ...
-func (pp *PaypalClient) RemoveCreditCardDetail(creditCardID string) error {
-	err := pp.client.DeleteCreditCard(creditCardID)
-	return err
-}
+///// PayPal Util /////
 
-// Paypal util
-
-// generateAddress ...
-func generateAddress(line1, line2, city, countryCode, postalCode, state, phone string) *paypal.Address {
-	address := &paypal.Address{
-		Line1:       line1,
-		Line2:       line2,
-		City:        city,
-		CountryCode: countryCode,
-		PostalCode:  postalCode,
-		State:       state,
-		Phone:       phone,
-	}
-
-	return address
-}
-
-// generateCreditDetail ...
-func generateCreditDetail(id, payerID, externalCustomerID, number, typeCard, expireMonth, expireYear, cvv2, firstName, lastName, State, ValidUntil string, billingAddress *paypal.Address) paypal.CreditCard {
-	creditCardDetail := paypal.CreditCard{
-		ID:                 id,
-		PayerID:            payerID,
-		ExternalCustomerID: externalCustomerID,
-		Number:             number,
-		Type:               typeCard,
-		ExpireMonth:        expireMonth,
-		ExpireYear:         expireYear,
-		CVV2:               cvv2,
-		FirstName:          firstName,
-		LastName:           lastName,
-		BillingAddress:     billingAddress,
-		State:              State,
-		ValidUntil:         ValidUntil,
-	}
-
-	return creditCardDetail
+// convertPayPalRequestToJSON ...
+func convertPayPalRequestToJSON(pp *PaypalClient, method, url string, payload interface{}) (httpClient *http.Request, err error) {
+	return pp.client.NewRequest(method, url, payload)
 }
