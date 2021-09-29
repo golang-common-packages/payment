@@ -1,85 +1,49 @@
 package payment
 
-import (
-	"github.com/plaid/plaid-go/plaid"
-)
+import "net/http"
 
+// Begin Payment Connection Models //
+
+// Config model
 type Config struct {
-	ClientID  string `json:"clientID,omitempty"`
-	SecretID  string `json:"secretID,omitempty"`
-	PublicKey string `json:"publicKey,omitempty"`
+	PayPal PayPal `json:"paypal,omitempty"`
 }
 
-type MoneyTransfer struct {
-	ReceiverIBAN string                    `json:"recipientIBAN,omitempty"`
-	Receiver     string                    `json:"recipient,omitempty"`      /// PayPal
-	ReceiverType string                    `json:"transferMethod,omitempty"` /// PayPal
-	Amount       `json:"amount,omitempty"` /// PayPal
-	Comment      string                    `json:"comment,omitempty"`      /// PayPal
-	EmailSubject string                    `json:"emailSubject,omitempty"` /// PayPal
-	Address      `json:"address,omitempty"`
+// Paypal model for Paypal connection config
+type PayPal struct {
+	ClientID string `json:"clientID"`
+	SecretID string `json:"secretID"`
+	APIBase  string `json:"apiBase"`
 }
 
-type Amount struct {
-	Value    string `json:"amount,omitempty"`
-	Currency string `json:"currencyType,omitempty"`
+// End Payment Connection Models //
+
+// -------------------------------------------------------------------------
+
+// Begin PayPal Models //
+
+// TokenResponse is for API response for the /oauth2/token endpoint
+type TokenResponse struct {
+	RefreshToken string `json:"refresh_token"`
+	Token        string `json:"access_token"`
+	Type         string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
 }
 
-type Address struct {
-	Street     string `json:"street,omitempty"`
-	City       string `json:"city,omitempty"`
-	PostalCode string `json:"postalCode,omitempty"`
-	Country    string `json:"country,omitempty"`
+// ErrorResponse based on https://developer.paypal.com/docs/api/errors/
+type ErrorResponse struct {
+	Response        *http.Response        `json:"-"`
+	Name            string                `json:"name"`
+	DebugID         string                `json:"debug_id"`
+	Message         string                `json:"message"`
+	InformationLink string                `json:"information_link"`
+	Details         []ErrorResponseDetail `json:"details"`
 }
 
-type PayPalLinkBank struct {
-	BankAccountNumber              string `json:"bankAccountNumber,omitempty"`
-	InternationalBankAccountNumber string `json:"iban,omitempty"`
-	BankAccountType                string `json:"bankAccountType,omitempty"`
-	BankCountryCode                string `json:"bankCountryCode,omitempty"`
-	BankName                       string `json:"bankName,omitempty"`
-	CLABE                          string `json:"clabe,omitempty"`
-	ConfirmationType               string `json:"confirmationType,omitempty"`
+// ErrorResponseDetail struct
+type ErrorResponseDetail struct {
+	Field string `json:"field"`
+	Issue string `json:"issue"`
 }
 
-type StripeLinkBank struct {
-	CustomerID        string `json:"customerID,omitempty"`
-	Token             string `json:"auth,omitempty"`
-	AccountHolderName string `json:"accountHolderName,omitempty"`
-	AccountHolderType string `json:"accountHolderType,omitempty"`
-	AccountNumber     string `json:"accountNumber,omitempty"`
-	Country           string `json:"country,omitempty"`
-	Currency          string `json:"currency,omitempty"`
-}
-
-///// Plaid models /////
-
-type PlaidTransactionsHistory struct {
-	Accounts     []plaid.Account     `json:"Accounts,omitempty"`
-	Transactions []plaid.Transaction `json:"Transactions,omitempty"`
-}
-
-type PlaidPayment struct {
-	ProductName         string `json:"productName,omitempty"`
-	IBAN                string `json:"iban,omitempty"`
-	PlaidAmount         `json:"plaidAmount,omitempty"`
-	PlaidPaymentAddress `json:"plaidPaymentAddress,omitempty"`
-}
-
-type PlaidAmount struct {
-	Currency string  `json:"currency,omitempty"`
-	Amount   float64 `json:"value,omitempty"`
-}
-
-type PlaidPaymentAddress struct {
-	Street     []string `json:"street,omitempty"`
-	City       string   `json:"city,omitempty"`
-	PostalCode string   `json:"postalCode,omitempty"`
-	Country    string   `json:"country,omitempty"`
-}
-
-type PlaidPaymentResult struct {
-	RecipientID  string `json:"recipientID,omitempty"`
-	PaymentID    string `json:"paymentID,omitempty"`
-	PaymentToken string `json:"paymentToken,omitempty"`
-}
+// End PayPal Models //

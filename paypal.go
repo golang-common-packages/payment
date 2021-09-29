@@ -1,132 +1,91 @@
 package payment
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
+	"sync"
+	"time"
 
-	"github.com/plutov/paypal/v3"
+	"github.com/golang-common-packages/hash"
 )
 
-// PaypalClient model for PayPal instance
-type PaypalClient struct {
-	client *paypal.Client
-	auth   *paypal.TokenResponse
+// IPayPal interface for PayPal services
+type IPayPal interface {
+	GetAccessToken(ctx context.Context) (*TokenResponse, error)
 }
 
-// NewPaypal return new PayPal instance
-func NewPaypal(clientID, secretID string) *PaypalClient {
-	currentClient := &PaypalClient{nil, nil}
+// PayPalClient represents a Paypal REST API Client
+type PayPalClient struct {
+	sync.Mutex
+	Client               *http.Client
+	ClientID             string
+	Secret               string
+	APIBase              string
+	Log                  io.Writer // If user set log file name all requests will be logged there
+	Token                *TokenResponse
+	tokenExpiresAt       time.Time
+	returnRepresentation bool
+}
 
-	client, err := paypal.NewClient("clientID", "secretID", paypal.APIBaseLive)
+// payPalClientSessionMapping singleton pattern
+var payPalClientSessionMapping = make(map[string]*PayPalClient)
+
+// newPayPal init new instance.
+// APIBase is a base API URL, for testing you can use paypal.APIBaseSandBox
+func newPayPal(config *PayPal) IPayPal {
+	// Validate config file
+	if config.ClientID == "" || config.SecretID == "" || config.APIBase == "" {
+		log.Fatalln("ClientID, Secret and APIBase are required to create a Client")
+	}
+
+	// Init PayPal client with singleton pattern
+	hasher := &hash.Client{}
+	configAsJSON, err := json.Marshal(config)
 	if err != nil {
-		log.Println("Can not init PayPal client: ", err)
-		panic(err)
+		log.Fatalln("Unable to marshal PayPal configuration: ", err)
 	}
-	client.SetLog(os.Stdout) // Set log to terminal stdout
+	configAsString := hasher.SHA1(string(configAsJSON))
 
-	result, err := client.GetAccessToken()
+	currentPayPalSession := payPalClientSessionMapping[configAsString]
+	if currentPayPalSession == nil {
+
+		currentPayPalSession.Client = &http.Client{}
+		currentPayPalSession.ClientID = config.ClientID
+		currentPayPalSession.Secret = config.SecretID
+		currentPayPalSession.APIBase = config.APIBase
+		payPalClientSessionMapping[configAsString] = currentPayPalSession
+
+		log.Println("Init PayPal client successfully")
+	}
+
+	return currentPayPalSession
+}
+
+// GetAccessToken returns struct of TokenResponse.
+// No need to call SetAccessToken to apply new access token for current Client.
+// Endpoint: POST /v1/oauth2/token
+func (c *PayPalClient) GetAccessToken(ctx context.Context) (*TokenResponse, error) {
+	buf := bytes.NewBuffer([]byte("grant_type=client_credentials"))
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s%s", c.APIBase, "/v1/oauth2/token"), buf)
 	if err != nil {
-		log.Println("Can not get access token: ", err)
-		panic(err)
+		return &TokenResponse{}, err
 	}
 
-	currentClient.client = client
-	currentClient.auth = result
-	log.Println("Init PayPal service success")
+	req.Header.Set("Content-type", "application/x-www-form-urlencoded")
 
-	return currentClient
-}
+	response := &TokenResponse{}
+	err = c.SendWithBasicAuth(req, response)
 
-// SetAccessToken set new access token to current PayPal client
-func (pp *PaypalClient) SetAccessToken(accessToken string) {
-	pp.client.SetAccessToken(accessToken)
-}
-
-// SetHTTPClient set new HTTP client to current PayPal client
-func (pp *PaypalClient) SetHTTPClient(httpClient *http.Client) {
-	pp.client.SetHTTPClient(httpClient)
-}
-
-// SetLog  set new log service to current PayPal client
-func (pp *PaypalClient) SetLog(log io.Writer) {
-	pp.client.SetLog(log)
-}
-
-// https://developer.paypal.com/docs/payouts/
-// TransferMoney to send money to multiple people at the same time
-func (pp *PaypalClient) TransferMoney(transferInfo *MoneyTransfer) (result interface{}, err error) {
-	payout := paypal.Payout{
-		SenderBatchHeader: &paypal.SenderBatchHeader{
-			EmailSubject: transferInfo.EmailSubject,
-		},
-		Items: []paypal.PayoutItem{
-			{
-				RecipientType: transferInfo.ReceiverType,
-				Receiver:      transferInfo.Receiver,
-				Amount: &paypal.AmountPayout{
-					Value:    transferInfo.Value,
-					Currency: transferInfo.Currency,
-				},
-				Note: transferInfo.Comment,
-			},
-		},
+	// Set Token fur current Client
+	if response.Token != "" {
+		c.Token = response
+		c.tokenExpiresAt = time.Now().Add(time.Duration(response.ExpiresIn) * time.Second)
 	}
 
-	payoutResp, err := pp.client.CreateSinglePayout(payout)
-	if err != nil {
-		return nil, err
-	}
-
-	return payoutResp, nil
-}
-
-// https://developer.paypal.com/docs/archive/adaptive-accounts/api/add-bank-account/
-// LinkBankAccount to current user
-func (pp *PaypalClient) LinkBankAccount(linkToPayPal PayPalLinkBank) (interface{}, error) {
-	httpRequest, err := convertPayPalRequestToJSON(pp, "POST", "", linkToPayPal)
-	if err != nil {
-		return nil, err
-	}
-
-	var result interface{}
-	err = pp.client.SendWithBasicAuth(httpRequest, result)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-// StoreCreditCard to PalPay system based on current user
-func (pp *PaypalClient) StoreCreditCard(creditCardInfo paypal.CreditCard) (result *paypal.CreditCard, err error) {
-	return pp.client.StoreCreditCard(creditCardInfo)
-}
-
-// ListCreditCards belong to current user
-func (pp *PaypalClient) ListCreditCards(page, pageSize int) (result *paypal.CreditCards, err error) {
-	creditCardFilter := &paypal.CreditCardsFilter{
-		PageSize: pageSize,
-		Page:     page,
-	}
-
-	return pp.client.GetCreditCards(creditCardFilter)
-}
-
-// GetCreditCardDetail belong to current user by creditCardID
-func (pp *PaypalClient) GetCreditCardDetail(creditCardID string) (result *paypal.CreditCard, err error) {
-	return pp.client.GetCreditCard(creditCardID)
-}
-
-// RemoveCreditCard out of current user
-func (pp *PaypalClient) RemoveCreditCard(creditCardID string) (err error) {
-	return pp.client.DeleteCreditCard(creditCardID)
-}
-
-///// PayPal Util /////
-
-// convertPayPalRequestToJSON ...
-func convertPayPalRequestToJSON(pp *PaypalClient, method, url string, payload interface{}) (httpClient *http.Request, err error) {
-	return pp.client.NewRequest(method, url, payload)
+	return response, err
 }
