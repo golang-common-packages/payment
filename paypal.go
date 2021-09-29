@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +20,28 @@ import (
 // IPayPal interface for PayPal services
 type IPayPal interface {
 	GetAccessToken(ctx context.Context) (*TokenResponse, error)
+	CreatePayout(ctx context.Context, p Payout) (*PayoutResponse, error)
+	GetPayout(ctx context.Context, payoutBatchID string) (*PayoutResponse, error)
+	GetPayoutItem(ctx context.Context, payoutItemID string) (*PayoutItemResponse, error)
+	CancelPayoutItem(ctx context.Context, payoutItemID string) (*PayoutItemResponse, error)
+	GetSale(ctx context.Context, saleID string) (*Sale, error)
+	RefundSale(ctx context.Context, saleID string, a *Amount) (*Refund, error)
+	ListBillingPlans(ctx context.Context, bplp BillingPlanListParams) (*BillingPlanListResponse, error)
+	CreateBillingPlan(ctx context.Context, plan BillingPlan) (*CreateBillingResponse, error)
+	UpdateBillingPlan(ctx context.Context, planId string, pathValues map[string]map[string]interface{}) error
+	ActivatePlan(ctx context.Context, planID string) error
+	CreateBillingAgreement(ctx context.Context, a BillingAgreement) (*CreateAgreementResponse, error)
+	ExecuteApprovedAgreement(ctx context.Context, token string) (*ExecuteAgreementResponse, error)
+	GetAuthorization(ctx context.Context, authID string) (*Authorization, error)
+	CaptureAuthorization(ctx context.Context, authID string, paymentCaptureRequest *PaymentCaptureRequest) (*PaymentCaptureResponse, error)
+	CaptureAuthorizationWithPaypalRequestId(ctx context.Context, authID string, paymentCaptureRequest *PaymentCaptureRequest, requestID string) (*PaymentCaptureResponse, error)
+	VoidAuthorization(ctx context.Context, authID string) (*Authorization, error)
+	ReauthorizeAuthorization(ctx context.Context, authID string, a *Amount) (*Authorization, error)
+	GetCapturedPaymentDetails(ctx context.Context, id string) (*Capture, error)
+	GetRefund(ctx context.Context, refundID string) (*Refund, error)
+	GetUserInfo(ctx context.Context, schema string) (*UserInfo, error)
+	GrantNewAccessTokenFromAuthCode(ctx context.Context, code, redirectURI string) (*TokenResponse, error)
+	GrantNewAccessTokenFromRefreshToken(ctx context.Context, refreshToken string) (*TokenResponse, error)
 }
 
 // PayPalClient represents a Paypal REST API Client
@@ -347,11 +370,7 @@ func (c *PayPalClient) CaptureAuthorization(ctx context.Context, authID string, 
 // CaptureAuthorization captures and process an existing authorization with idempotency.
 // To use this method, the original payment must have Intent set to "authorize"
 // Endpoint: POST /v2/payments/authorizations/ID/capture
-func (c *PayPalClient) CaptureAuthorizationWithPaypalRequestId(ctx context.Context,
-	authID string,
-	paymentCaptureRequest *PaymentCaptureRequest,
-	requestID string,
-) (*PaymentCaptureResponse, error) {
+func (c *PayPalClient) CaptureAuthorizationWithPaypalRequestId(ctx context.Context, authID string, paymentCaptureRequest *PaymentCaptureRequest, requestID string) (*PaymentCaptureResponse, error) {
 	req, err := c.NewRequest(ctx, "POST", fmt.Sprintf("%s%s", c.APIBase, "/v2/payments/authorizations/"+authID+"/capture"), paymentCaptureRequest)
 	paymentCaptureResponse := &PaymentCaptureResponse{}
 
