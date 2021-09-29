@@ -2,11 +2,11 @@
 
 ## PayPal
 
-### Auth
+### Auth v1
 
 * POST /v1/oauth2/token
 
-### /v1/payments
+### Payment v1
 
 * POST /v1/payments/payouts
 * GET /v1/payments/payouts/:id
@@ -20,7 +20,7 @@
 * POST /v1/payments/billing-agreements
 * POST /v1/payments/billing-agreements/:token/agreement-execute
 
-### /v2/payments
+### Payment v2
 
 * GET /v2/payments/authorizations/:id
 * POST /v2/payments/authorizations/:id/capture
@@ -28,3 +28,7 @@
 * POST /v2/payments/authorizations/:id/reauthorize
 * GET /v2/payments/captures/:id
 * GET /v2/payments/refund/:id
+
+### Identity v1
+* GET /v1/identity/openidconnect/userinfo/?schema=:schema
+* POST /v1/identity/openidconnect/tokenservice (oauth or refresh token)

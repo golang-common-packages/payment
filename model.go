@@ -470,4 +470,24 @@ type AgreementDetails struct {
 	FailedPaymentCount int          `json:"failed_payment_count,string"`
 }
 
+// UserInfo struct
+type UserInfo struct {
+	ID              string   `json:"user_id"`
+	Name            string   `json:"name"`
+	GivenName       string   `json:"given_name"`
+	FamilyName      string   `json:"family_name"`
+	Email           string   `json:"email"`
+	Verified        bool     `json:"verified,omitempty,string"`
+	Gender          string   `json:"gender,omitempty"`
+	BirthDate       string   `json:"birthdate,omitempty"`
+	ZoneInfo        string   `json:"zoneinfo,omitempty"`
+	Locale          string   `json:"locale,omitempty"`
+	Phone           string   `json:"phone_number,omitempty"`
+	Address         *Address `json:"address,omitempty"`
+	VerifiedAccount bool     `json:"verified_account,omitempty,string"`
+	AccountType     string   `json:"account_type,omitempty"`
+	AgeRange        string   `json:"age_range,omitempty"`
+	PayerID         string   `json:"payer_id,omitempty"`
+}
+
 // End PayPal Models //
