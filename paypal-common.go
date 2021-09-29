@@ -1,13 +1,57 @@
 package payment
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"time"
 )
+
+// NewRequest constructs a request
+// Convert payload to a JSON
+func (c *PayPalClient) NewRequest(ctx context.Context, method, url string, payload interface{}) (*http.Request, error) {
+	var buf io.Reader
+	if payload != nil {
+		b, err := json.Marshal(&payload)
+		if err != nil {
+			return nil, err
+		}
+		buf = bytes.NewBuffer(b)
+	}
+	return http.NewRequestWithContext(ctx, method, url, buf)
+}
+
+// SendWithAuth makes a request to the API and apply OAuth2 header automatically.
+// If the access token soon to be expired or already expired, it will try to get a new one before
+// making the main request
+// client.Token will be updated when changed
+func (c *PayPalClient) SendWithAuth(req *http.Request, v interface{}) error {
+	c.Lock()
+	// Note: Here we do not want to `defer c.Unlock()` because we need `c.Send(...)`
+	// to happen outside of the locked section.
+
+	if c.Token != nil {
+		if !c.tokenExpiresAt.IsZero() && c.tokenExpiresAt.Sub(time.Now()) < RequestNewTokenBeforeExpiresIn {
+			// c.Token will be updated in GetAccessToken call
+			if _, err := c.GetAccessToken(req.Context()); err != nil {
+				c.Unlock()
+				return err
+			}
+		}
+
+		req.Header.Set("Authorization", "Bearer "+c.Token.Token)
+	}
+
+	// Unlock the client mutex before sending the request, this allows multiple requests
+	// to be in progress at the same time.
+	c.Unlock()
+	return c.Send(req, v)
+}
 
 // SendWithBasicAuth makes a request to the API using clientID:secret basic auth
 func (c *PayPalClient) SendWithBasicAuth(req *http.Request, v interface{}) error {
