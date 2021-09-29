@@ -25,6 +25,12 @@ type PayPal struct {
 
 // Begin PayPal Models //
 
+// BillingPlanStatus has type is string. This type may change in the future
+type BillingPlanStatus string
+
+// JSONTime overrides MarshalJson method to format in ISO8601
+type JSONTime time.Time
+
 // TokenResponse is for API response for the /oauth2/token endpoint
 type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
@@ -258,6 +264,210 @@ type Capture struct {
 	CreateTime     *time.Time `json:"create_time,omitempty"`
 	UpdateTime     *time.Time `json:"update_time,omitempty"`
 	Links          []Link     `json:"links,omitempty"`
+}
+
+// BillingPlanListParams struct
+type BillingPlanListParams struct {
+	ListParams
+	Status string `json:"status,omitempty"` //Allowed values: CREATED, ACTIVE, INACTIVE, ALL.
+}
+
+// ListParams struct
+type ListParams struct {
+	Page          string `json:"page,omitempty"`           //Default: 0.
+	PageSize      string `json:"page_size,omitempty"`      //Default: 10.
+	TotalRequired string `json:"total_required,omitempty"` //Default: no.
+}
+
+// BillingPlanListResponse struct
+type BillingPlanListResponse struct {
+	SharedListResponse
+	Plans []BillingPlan `json:"plans,omitempty"`
+}
+
+// SharedListResponse struct
+type SharedListResponse struct {
+	TotalItems int    `json:"total_items,omitempty"`
+	TotalPages int    `json:"total_pages,omitempty"`
+	Links      []Link `json:"links,omitempty"`
+}
+
+// BillingPlan struct
+type BillingPlan struct {
+	ID                  string               `json:"id,omitempty"`
+	Name                string               `json:"name,omitempty"`
+	Description         string               `json:"description,omitempty"`
+	Type                string               `json:"type,omitempty"`
+	PaymentDefinitions  []PaymentDefinition  `json:"payment_definitions,omitempty"`
+	MerchantPreferences *MerchantPreferences `json:"merchant_preferences,omitempty"`
+}
+
+// PaymentDefinition struct
+type PaymentDefinition struct {
+	ID                string        `json:"id,omitempty"`
+	Name              string        `json:"name,omitempty"`
+	Type              string        `json:"type,omitempty"`
+	Frequency         string        `json:"frequency,omitempty"`
+	FrequencyInterval string        `json:"frequency_interval,omitempty"`
+	Amount            AmountPayout  `json:"amount,omitempty"`
+	Cycles            string        `json:"cycles,omitempty"`
+	ChargeModels      []ChargeModel `json:"charge_models,omitempty"`
+}
+
+// MerchantPreferences struct
+type MerchantPreferences struct {
+	SetupFee                *AmountPayout `json:"setup_fee,omitempty"`
+	ReturnURL               string        `json:"return_url,omitempty"`
+	CancelURL               string        `json:"cancel_url,omitempty"`
+	AutoBillAmount          string        `json:"auto_bill_amount,omitempty"`
+	InitialFailAmountAction string        `json:"initial_fail_amount_action,omitempty"`
+	MaxFailAttempts         string        `json:"max_fail_attempts,omitempty"`
+}
+
+// ChargeModel struct
+type ChargeModel struct {
+	Type   string       `json:"type,omitempty"`
+	Amount AmountPayout `json:"amount,omitempty"`
+}
+
+// CreateBillingResponse struct
+type CreateBillingResponse struct {
+	ID                  string              `json:"id,omitempty"`
+	State               string              `json:"state,omitempty"`
+	PaymentDefinitions  []PaymentDefinition `json:"payment_definitions,omitempty"`
+	MerchantPreferences MerchantPreferences `json:"merchant_preferences,omitempty"`
+	CreateTime          time.Time           `json:"create_time,omitempty"`
+	UpdateTime          time.Time           `json:"update_time,omitempty"`
+	Links               []Link              `json:"links,omitempty"`
+}
+
+// Patch struct
+type Patch struct {
+	Operation string      `json:"op"`
+	Path      string      `json:"path"`
+	Value     interface{} `json:"value"`
+}
+
+// BillingAgreement struct
+type BillingAgreement struct {
+	Name                        string               `json:"name,omitempty"`
+	Description                 string               `json:"description,omitempty"`
+	StartDate                   JSONTime             `json:"start_date,omitempty"`
+	Plan                        BillingPlan          `json:"plan,omitempty"`
+	Payer                       Payer                `json:"payer,omitempty"`
+	ShippingAddress             *ShippingAddress     `json:"shipping_address,omitempty"`
+	OverrideMerchantPreferences *MerchantPreferences `json:"override_merchant_preferences,omitempty"`
+}
+
+// Payer struct
+type Payer struct {
+	PaymentMethod      string              `json:"payment_method"`
+	FundingInstruments []FundingInstrument `json:"funding_instruments,omitempty"`
+	PayerInfo          *PayerInfo          `json:"payer_info,omitempty"`
+	Status             string              `json:"payer_status,omitempty"`
+}
+
+// FundingInstrument struct
+type FundingInstrument struct {
+	CreditCard      *CreditCard      `json:"credit_card,omitempty"`
+	CreditCardToken *CreditCardToken `json:"credit_card_token,omitempty"`
+}
+
+// CreditCard struct
+type CreditCard struct {
+	ID                 string   `json:"id,omitempty"`
+	PayerID            string   `json:"payer_id,omitempty"`
+	ExternalCustomerID string   `json:"external_customer_id,omitempty"`
+	Number             string   `json:"number"`
+	Type               string   `json:"type"`
+	ExpireMonth        string   `json:"expire_month"`
+	ExpireYear         string   `json:"expire_year"`
+	CVV2               string   `json:"cvv2,omitempty"`
+	FirstName          string   `json:"first_name,omitempty"`
+	LastName           string   `json:"last_name,omitempty"`
+	BillingAddress     *Address `json:"billing_address,omitempty"`
+	State              string   `json:"state,omitempty"`
+	ValidUntil         string   `json:"valid_until,omitempty"`
+}
+
+// Address struct
+type Address struct {
+	Line1       string `json:"line1,omitempty"`
+	Line2       string `json:"line2,omitempty"`
+	City        string `json:"city,omitempty"`
+	CountryCode string `json:"country_code,omitempty"`
+	PostalCode  string `json:"postal_code,omitempty"`
+	State       string `json:"state,omitempty"`
+	Phone       string `json:"phone,omitempty"`
+}
+
+// CreditCardToken struct
+type CreditCardToken struct {
+	CreditCardID string `json:"credit_card_id"`
+	PayerID      string `json:"payer_id,omitempty"`
+	Last4        string `json:"last4,omitempty"`
+	ExpireYear   string `json:"expire_year,omitempty"`
+	ExpireMonth  string `json:"expire_month,omitempty"`
+}
+
+// PayerInfo struct
+type PayerInfo struct {
+	Email           string           `json:"email,omitempty"`
+	FirstName       string           `json:"first_name,omitempty"`
+	LastName        string           `json:"last_name,omitempty"`
+	PayerID         string           `json:"payer_id,omitempty"`
+	Phone           string           `json:"phone,omitempty"`
+	ShippingAddress *ShippingAddress `json:"shipping_address,omitempty"`
+	TaxIDType       string           `json:"tax_id_type,omitempty"`
+	TaxID           string           `json:"tax_id,omitempty"`
+	CountryCode     string           `json:"country_code"`
+}
+
+// ShippingAddress struct
+type ShippingAddress struct {
+	RecipientName string `json:"recipient_name,omitempty"`
+	Type          string `json:"type,omitempty"`
+	Line1         string `json:"line1"`
+	Line2         string `json:"line2,omitempty"`
+	City          string `json:"city"`
+	CountryCode   string `json:"country_code"`
+	PostalCode    string `json:"postal_code,omitempty"`
+	State         string `json:"state,omitempty"`
+	Phone         string `json:"phone,omitempty"`
+}
+
+// CreateAgreementResponse struct
+type CreateAgreementResponse struct {
+	Name        string      `json:"name,omitempty"`
+	Description string      `json:"description,omitempty"`
+	Plan        BillingPlan `json:"plan,omitempty"`
+	Links       []Link      `json:"links,omitempty"`
+	StartTime   time.Time   `json:"start_time,omitempty"`
+}
+
+// ExecuteAgreementResponse struct
+type ExecuteAgreementResponse struct {
+	ID               string           `json:"id"`
+	State            string           `json:"state"`
+	Description      string           `json:"description,omitempty"`
+	Payer            Payer            `json:"payer"`
+	Plan             BillingPlan      `json:"plan"`
+	StartDate        time.Time        `json:"start_date"`
+	ShippingAddress  ShippingAddress  `json:"shipping_address"`
+	AgreementDetails AgreementDetails `json:"agreement_details"`
+	Links            []Link           `json:"links"`
+}
+
+// AgreementDetails struct
+type AgreementDetails struct {
+	OutstandingBalance AmountPayout `json:"outstanding_balance"`
+	CyclesRemaining    int          `json:"cycles_remaining,string"`
+	CyclesCompleted    int          `json:"cycles_completed,string"`
+	NextBillingDate    time.Time    `json:"next_billing_date"`
+	LastPaymentDate    time.Time    `json:"last_payment_date"`
+	LastPaymentAmount  AmountPayout `json:"last_payment_amount"`
+	FinalPaymentDate   time.Time    `json:"final_payment_date"`
+	FailedPaymentCount int          `json:"failed_payment_count,string"`
 }
 
 // End PayPal Models //

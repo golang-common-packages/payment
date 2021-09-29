@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -41,6 +42,9 @@ const (
 
 	// RequestNewTokenBeforeExpiresIn is used by SendWithAuth and try to get new Token when it's about to expire
 	RequestNewTokenBeforeExpiresIn = time.Duration(60) * time.Second
+
+	// BillingPlanStatusActive is used by BillingPlan and a few others
+	BillingPlanStatusActive BillingPlanStatus = "ACTIVE"
 )
 
 // payPalClientSessionMapping singleton pattern
@@ -214,22 +218,107 @@ func (c *PayPalClient) RefundSale(ctx context.Context, saleID string, a *Amount)
 	return refund, nil
 }
 
-// GetRefund by ID
-// Use it to look up details of a specific refund on direct and captured payments.
-// Endpoint: GET /v2/payments/refund/ID
-func (c *PayPalClient) GetRefund(ctx context.Context, refundID string) (*Refund, error) {
-	refund := &Refund{}
-
-	req, err := c.NewRequest(ctx, "GET", fmt.Sprintf("%s%s", c.APIBase, "/v2/payments/refund/"+refundID), nil)
+// ListBillingPlans lists billing-plans
+// Endpoint: GET /v1/payments/billing-plans
+func (c *PayPalClient) ListBillingPlans(ctx context.Context, bplp BillingPlanListParams) (*BillingPlanListResponse, error) {
+	req, err := c.NewRequest(ctx, "GET", fmt.Sprintf("%s%s", c.APIBase, "/v1/payments/billing-plans"), nil)
+	response := &BillingPlanListResponse{}
 	if err != nil {
-		return refund, err
+		return response, err
 	}
 
-	if err = c.SendWithAuth(req, refund); err != nil {
-		return refund, err
+	q := req.URL.Query()
+	q.Add("page", bplp.Page)
+	q.Add("page_size", bplp.PageSize)
+	q.Add("status", bplp.Status)
+	q.Add("total_required", bplp.TotalRequired)
+	req.URL.RawQuery = q.Encode()
+
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// CreateBillingPlan creates a billing plan in Paypal
+// Endpoint: POST /v1/payments/billing-plans
+func (c *PayPalClient) CreateBillingPlan(ctx context.Context, plan BillingPlan) (*CreateBillingResponse, error) {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.APIBase, "/v1/payments/billing-plans"), plan)
+	response := &CreateBillingResponse{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// UpdateBillingPlan updates values inside a billing plan
+// Endpoint: PATCH /v1/payments/billing-plans
+func (c *PayPalClient) UpdateBillingPlan(ctx context.Context, planId string, pathValues map[string]map[string]interface{}) error {
+	patchData := []Patch{}
+	for path, data := range pathValues {
+		patchData = append(patchData, Patch{
+			Operation: "replace",
+			Path:      path,
+			Value:     data,
+		})
 	}
 
-	return refund, nil
+	req, err := c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("%s%s%s", c.APIBase, "/v1/payments/billing-plans/", planId), patchData)
+	if err != nil {
+		return err
+	}
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// ActivatePlan activates a billing plan
+// By default, a new plan is not activated
+// Endpoint: PATCH /v1/payments/billing-plans/
+func (c *PayPalClient) ActivatePlan(ctx context.Context, planID string) error {
+	return c.UpdateBillingPlan(ctx, planID, map[string]map[string]interface{}{
+		"/": {"state": BillingPlanStatusActive},
+	})
+}
+
+// CreateBillingAgreement creates an agreement for specified plan
+// Endpoint: POST /v1/payments/billing-agreements
+// Deprecated: Use POST /v1/billing-agreements/agreements
+func (c *PayPalClient) CreateBillingAgreement(ctx context.Context, a BillingAgreement) (*CreateAgreementResponse, error) {
+	// PayPal needs only ID, so we will remove all fields except Plan ID
+	a.Plan = BillingPlan{
+		ID: a.Plan.ID,
+	}
+
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.APIBase, "/v1/payments/billing-agreements"), a)
+	response := &CreateAgreementResponse{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// ExecuteApprovedAgreement - Use this call to execute (complete) a PayPal agreement that has been approved by the payer.
+// Endpoint: POST /v1/payments/billing-agreements/token/agreement-execute
+func (c *PayPalClient) ExecuteApprovedAgreement(ctx context.Context, token string) (*ExecuteAgreementResponse, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s/v1/payments/billing-agreements/%s/agreement-execute", c.APIBase, token), nil)
+	response := &ExecuteAgreementResponse{}
+
+	if err != nil {
+		return response, err
+	}
+
+	req.SetBasicAuth(c.ClientID, c.Secret)
+	req.Header.Set("Authorization", "Bearer "+c.Token.Token)
+
+	if err = c.SendWithAuth(req, response); err != nil {
+		return response, err
+	}
+
+	if response.ID == "" {
+		return response, errors.New("Unable to execute agreement with token=" + token)
+	}
+
+	return response, err
 }
 
 // GetAuthorization returns an authorization by ID
@@ -323,4 +412,22 @@ func (c *PayPalClient) GetCapturedPaymentDetails(ctx context.Context, id string)
 	}
 
 	return res, nil
+}
+
+// GetRefund by ID
+// Use it to look up details of a specific refund on direct and captured payments.
+// Endpoint: GET /v2/payments/refund/ID
+func (c *PayPalClient) GetRefund(ctx context.Context, refundID string) (*Refund, error) {
+	refund := &Refund{}
+
+	req, err := c.NewRequest(ctx, "GET", fmt.Sprintf("%s%s", c.APIBase, "/v2/payments/refund/"+refundID), nil)
+	if err != nil {
+		return refund, err
+	}
+
+	if err = c.SendWithAuth(req, refund); err != nil {
+		return refund, err
+	}
+
+	return refund, nil
 }
