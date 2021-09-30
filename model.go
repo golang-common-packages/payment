@@ -524,4 +524,147 @@ type FlowConfig struct {
 	UserAction        string `json:"user_action,omitempty"`
 }
 
+// TransactionSearchRequest struct
+type TransactionSearchRequest struct {
+	TransactionID               *string
+	TransactionType             *string
+	TransactionStatus           *string
+	TransactionAmount           *string
+	TransactionCurrency         *string
+	StartDate                   time.Time
+	EndDate                     time.Time
+	PaymentInstrumentType       *string
+	StoreID                     *string
+	TerminalID                  *string
+	Fields                      *string
+	BalanceAffectingRecordsOnly *string
+	PageSize                    *int
+	Page                        *int
+}
+
+// TransactionSearchResponse struct
+type TransactionSearchResponse struct {
+	TransactionDetails  []SearchTransactionDetails `json:"transaction_details"`
+	AccountNumber       string                     `json:"account_number"`
+	StartDate           JSONTime                   `json:"start_date"`
+	EndDate             JSONTime                   `json:"end_date"`
+	LastRefreshDatetime JSONTime                   `json:"last_refreshed_datetime"`
+	Page                int                        `json:"page"`
+	SharedListResponse
+}
+
+// SearchTransactionDetails struct
+type SearchTransactionDetails struct {
+	TransactionInfo SearchTransactionInfo `json:"transaction_info"`
+	PayerInfo       *SearchPayerInfo      `json:"payer_info"`
+	ShippingInfo    *SearchShippingInfo   `json:"shipping_info"`
+	CartInfo        *SearchCartInfo       `json:"cart_info"`
+}
+
+// SearchTransactionInfo struct
+type SearchTransactionInfo struct {
+	PayPalAccountID           string   `json:"paypal_account_id"`
+	TransactionID             string   `json:"transaction_id"`
+	PayPalReferenceID         string   `json:"paypal_reference_id"`
+	PayPalReferenceIDType     string   `json:"paypal_reference_id_type"`
+	TransactionEventCode      string   `json:"transaction_event_code"`
+	TransactionInitiationDate JSONTime `json:"transaction_initiation_date"`
+	TransactionUpdatedDate    JSONTime `json:"transaction_updated_date"`
+	TransactionAmount         Money    `json:"transaction_amount"`
+	FeeAmount                 *Money   `json:"fee_amount"`
+	InsuranceAmount           *Money   `json:"insurance_amount"`
+	ShippingAmount            *Money   `json:"shipping_amount"`
+	ShippingDiscountAmount    *Money   `json:"shipping_discount_amount"`
+	ShippingTaxAmount         *Money   `json:"shipping_tax_amount"`
+	OtherAmount               *Money   `json:"other_amount"`
+	TipAmount                 *Money   `json:"tip_amount"`
+	TransactionStatus         string   `json:"transaction_status"`
+	TransactionSubject        string   `json:"transaction_subject"`
+	PaymentTrackingID         string   `json:"payment_tracking_id"`
+	BankReferenceID           string   `json:"bank_reference_id"`
+	TransactionNote           string   `json:"transaction_note"`
+	EndingBalance             *Money   `json:"ending_balance"`
+	AvailableBalance          *Money   `json:"available_balance"`
+	InvoiceID                 string   `json:"invoice_id"`
+	CustomField               string   `json:"custom_field"`
+	ProtectionEligibility     string   `json:"protection_eligibility"`
+	CreditTerm                string   `json:"credit_term"`
+	CreditTransactionalFee    *Money   `json:"credit_transactional_fee"`
+	CreditPromotionalFee      *Money   `json:"credit_promotional_fee"`
+	AnnualPercentageRate      string   `json:"annual_percentage_rate"`
+	PaymentMethodType         string   `json:"payment_method_type"`
+}
+
+// SearchPayerInfo struct
+type SearchPayerInfo struct {
+	AccountID     string               `json:"account_id"`
+	EmailAddress  string               `json:"email_address"`
+	PhoneNumber   *PhoneWithTypeNumber `json:"phone_number"`
+	AddressStatus string               `json:"address_status"`
+	PayerStatus   string               `json:"payer_status"`
+	PayerName     SearchPayerName      `json:"payer_name"`
+	CountryCode   string               `json:"country_code"`
+	Address       *Address             `json:"address"`
+}
+
+// PhoneWithTypeNumber struct for PhoneWithType
+type PhoneWithTypeNumber struct {
+	NationalNumber string `json:"national_number,omitempty"`
+}
+
+// SearchPayerName struct
+type SearchPayerName struct {
+	GivenName string `json:"given_name"`
+	Surname   string `json:"surname"`
+}
+
+// SearchShippingInfo struct
+type SearchShippingInfo struct {
+	Name                     string   `json:"name"`
+	Method                   string   `json:"method"`
+	Address                  Address  `json:"address"`
+	SecondaryShippingAddress *Address `json:"secondary_shipping_address"`
+}
+
+// SearchCartInfo struct
+type SearchCartInfo struct {
+	ItemDetails     []SearchItemDetails `json:"item_details"`
+	TaxInclusive    *bool               `json:"tax_inclusive"`
+	PayPalInvoiceID string              `json:"paypal_invoice_id"`
+}
+
+// SearchItemDetails struct
+type SearchItemDetails struct {
+	ItemCode            string                 `json:"item_code"`
+	ItemName            string                 `json:"item_name"`
+	ItemDescription     string                 `json:"item_description"`
+	ItemOptions         string                 `json:"item_options"`
+	ItemQuantity        string                 `json:"item_quantity"`
+	ItemUnitPrice       Money                  `json:"item_unit_price"`
+	ItemAmount          Money                  `json:"item_amount"`
+	DiscountAmount      *Money                 `json:"discount_amount"`
+	AdjustmentAmount    *Money                 `json:"adjustment_amount"`
+	GiftWrapAmount      *Money                 `json:"gift_wrap_amount"`
+	TaxPercentage       string                 `json:"tax_percentage"`
+	TaxAmounts          []SearchTaxAmount      `json:"tax_amounts"`
+	BasicShippingAmount *Money                 `json:"basic_shipping_amount"`
+	ExtraShippingAmount *Money                 `json:"extra_shipping_amount"`
+	HandlingAmount      *Money                 `json:"handling_amount"`
+	InsuranceAmount     *Money                 `json:"insurance_amount"`
+	TotalItemAmount     Money                  `json:"total_item_amount"`
+	InvoiceNumber       string                 `json:"invoice_number"`
+	CheckoutOptions     []SearchCheckoutOption `json:"checkout_options"`
+}
+
+// SearchTaxAmount struct
+type SearchTaxAmount struct {
+	TaxAmount Money `json:"tax_amount"`
+}
+
+// SearchCheckoutOption struct
+type SearchCheckoutOption struct {
+	CheckoutOptionName  string `json:"checkout_option_name"`
+	CheckoutOptionValue string `json:"checkout_option_value"`
+}
+
 // End PayPal Models //
