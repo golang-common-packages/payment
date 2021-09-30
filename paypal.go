@@ -48,6 +48,18 @@ type IPayPal interface {
 	GetWebProfiles(ctx context.Context) ([]WebProfile, error)
 	SetWebProfile(ctx context.Context, wp WebProfile) error
 	DeleteWebProfile(ctx context.Context, profileID string) error
+	ListTransactions(ctx context.Context, req *TransactionSearchRequest) (*TransactionSearchResponse, error)
+	StoreCreditCard(ctx context.Context, cc CreditCard) (*CreditCard, error)
+	DeleteCreditCard(ctx context.Context, id string) error
+	GetCreditCard(ctx context.Context, id string) (*CreditCard, error)
+	GetCreditCards(ctx context.Context, ccf *CreditCardsFilter) (*CreditCards, error)
+	PatchCreditCard(ctx context.Context, id string, ccf []CreditCardField) (*CreditCard, error)
+	GetOrder(ctx context.Context, orderID string) (*Order, error)
+	CreateOrder(ctx context.Context, intent string, purchaseUnits []PurchaseUnitRequest, payer *CreateOrderPayer, appContext *ApplicationContext) (*Order, error)
+	UpdateOrder(ctx context.Context, orderID string, purchaseUnits []PurchaseUnitRequest) (*Order, error)
+	AuthorizeOrder(ctx context.Context, orderID string, authorizeOrderRequest AuthorizeOrderRequest) (*Authorization, error)
+	CaptureOrder(ctx context.Context, orderID string, captureOrderRequest CaptureOrderRequest) (*CaptureOrderResponse, error)
+	CaptureOrderWithPaypalRequestId(ctx context.Context, orderID string, captureOrderRequest CaptureOrderRequest, requestID string) (*CaptureOrderResponse, error)
 }
 
 // PayPalClient represents a Paypal REST API Client
