@@ -646,3 +646,22 @@ type SearchCheckoutOption struct {
 	CheckoutOptionName  string `json:"checkout_option_name"`
 	CheckoutOptionValue string `json:"checkout_option_value"`
 }
+
+// CreditCardsFilter struct
+type CreditCardsFilter struct {
+	PageSize int
+	Page     int
+}
+
+// CreditCards struct
+type CreditCards struct {
+	Items []CreditCard `json:"items"`
+	SharedListResponse
+}
+
+// CreditCardField struct
+type CreditCardField struct {
+	Operation string `json:"op"`
+	Path      string `json:"path"`
+	Value     string `json:"value"`
+}

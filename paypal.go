@@ -685,3 +685,95 @@ func (c *PayPalClient) ListTransactions(ctx context.Context, req *TransactionSea
 
 	return response, nil
 }
+
+// StoreCreditCard function.
+// Endpoint: POST /v1/vault/credit-cards
+func (c *PayPalClient) StoreCreditCard(ctx context.Context, cc CreditCard) (*CreditCard, error) {
+	req, err := c.NewRequest(ctx, "POST", fmt.Sprintf("%s%s", c.APIBase, "/v1/vault/credit-cards"), cc)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreditCard{}
+
+	if err = c.SendWithAuth(req, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+// DeleteCreditCard function.
+// Endpoint: DELETE /v1/vault/credit-cards/credit_card_id
+func (c *PayPalClient) DeleteCreditCard(ctx context.Context, id string) error {
+	req, err := c.NewRequest(ctx, "DELETE", fmt.Sprintf("%s/v1/vault/credit-cards/%s", c.APIBase, id), nil)
+	if err != nil {
+		return err
+	}
+
+	if err = c.SendWithAuth(req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetCreditCard function.
+// Endpoint: GET /v1/vault/credit-cards/credit_card_id
+func (c *PayPalClient) GetCreditCard(ctx context.Context, id string) (*CreditCard, error) {
+	req, err := c.NewRequest(ctx, "GET", fmt.Sprintf("%s/v1/vault/credit-cards/%s", c.APIBase, id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreditCard{}
+
+	if err = c.SendWithAuth(req, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+// GetCreditCards function.
+// Endpoint: GET /v1/vault/credit-cards
+func (c *PayPalClient) GetCreditCards(ctx context.Context, ccf *CreditCardsFilter) (*CreditCards, error) {
+	page := 1
+	if ccf != nil && ccf.Page > 0 {
+		page = ccf.Page
+	}
+	pageSize := 10
+	if ccf != nil && ccf.PageSize > 0 {
+		pageSize = ccf.PageSize
+	}
+
+	req, err := c.NewRequest(ctx, "GET", fmt.Sprintf("%s/v1/vault/credit-cards?page=%d&page_size=%d", c.APIBase, page, pageSize), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreditCards{}
+
+	if err = c.SendWithAuth(req, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+// PatchCreditCard function.
+// Endpoint: PATCH /v1/vault/credit-cards/credit_card_id
+func (c *PayPalClient) PatchCreditCard(ctx context.Context, id string, ccf []CreditCardField) (*CreditCard, error) {
+	req, err := c.NewRequest(ctx, "PATCH", fmt.Sprintf("%s/v1/vault/credit-cards/%s", c.APIBase, id), ccf)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreditCard{}
+
+	if err = c.SendWithAuth(req, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}

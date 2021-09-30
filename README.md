@@ -45,3 +45,11 @@
 ### Reporting v1
 
 * POST /v1/reporting/transactions
+
+### Vault v1
+
+* POST /v1/vault/credit-cards
+* DELETE /v1/vault/credit-cards/:id
+* PATCH /v1/vault/credit-cards/:id
+* GET /v1/vault/credit-cards/:id
+* GET /v1/vault/credit-cards
