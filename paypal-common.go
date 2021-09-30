@@ -60,6 +60,12 @@ func (c *PayPalClient) SendWithBasicAuth(req *http.Request, v interface{}) error
 	return c.Send(req, v)
 }
 
+// SetReturnRepresentation enables verbose response
+// Verbose response: https://developer.paypal.com/docs/api/orders/v2/#orders-authorize-header-parameters
+func (c *PayPalClient) SetReturnRepresentation() {
+	c.returnRepresentation = true
+}
+
 // Send makes a request to the API, the response body will be
 // unmarshalled into v, or if v is an io.Writer, the response will
 // be written to it without decoding

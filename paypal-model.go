@@ -8,6 +8,12 @@ import (
 // BillingPlanStatus has type is string. This type may change in the future
 type BillingPlanStatus string
 
+// ShippingPreference has type is string. This type may change in the future
+type ShippingPreference string
+
+// UserAction has type is string. This type may change in the future
+type UserAction string
+
 // JSONTime overrides MarshalJson method to format in ISO8601
 type JSONTime time.Time
 
@@ -664,4 +670,263 @@ type CreditCardField struct {
 	Operation string `json:"op"`
 	Path      string `json:"path"`
 	Value     string `json:"value"`
+}
+
+// Order struct
+type Order struct {
+	ID            string                 `json:"id,omitempty"`
+	Status        string                 `json:"status,omitempty"`
+	Intent        string                 `json:"intent,omitempty"`
+	Payer         *PayerWithNameAndPhone `json:"payer,omitempty"`
+	PurchaseUnits []PurchaseUnit         `json:"purchase_units,omitempty"`
+	Links         []Link                 `json:"links,omitempty"`
+	CreateTime    *time.Time             `json:"create_time,omitempty"`
+	UpdateTime    *time.Time             `json:"update_time,omitempty"`
+}
+
+// PayerWithNameAndPhone struct
+type PayerWithNameAndPhone struct {
+	Name         *CreateOrderPayerName          `json:"name,omitempty"`
+	EmailAddress string                         `json:"email_address,omitempty"`
+	Phone        *PhoneWithType                 `json:"phone,omitempty"`
+	PayerID      string                         `json:"payer_id,omitempty"`
+	BirthDate    string                         `json:"birth_date,omitempty"`
+	TaxInfo      *TaxInfo                       `json:"tax_info,omitempty"`
+	Address      *ShippingDetailAddressPortable `json:"address,omitempty"`
+}
+
+// CreateOrderPayerName create order payer name
+type CreateOrderPayerName struct {
+	GivenName string `json:"given_name,omitempty"`
+	Surname   string `json:"surname,omitempty"`
+}
+
+// PhoneWithType struct used for orders
+type PhoneWithType struct {
+	PhoneType   string               `json:"phone_type,omitempty"`
+	PhoneNumber *PhoneWithTypeNumber `json:"phone_number,omitempty"`
+}
+
+// TaxInfo used for orders.
+type TaxInfo struct {
+	TaxID     string `json:"tax_id,omitempty"`
+	TaxIDType string `json:"tax_id_type,omitempty"`
+}
+
+// ShippingDetailAddressPortable used with create orders
+type ShippingDetailAddressPortable struct {
+	AddressLine1 string `json:"address_line_1,omitempty"`
+	AddressLine2 string `json:"address_line_2,omitempty"`
+	AdminArea1   string `json:"admin_area_1,omitempty"`
+	AdminArea2   string `json:"admin_area_2,omitempty"`
+	PostalCode   string `json:"postal_code,omitempty"`
+	CountryCode  string `json:"country_code,omitempty"`
+}
+
+// PurchaseUnit struct
+type PurchaseUnit struct {
+	ReferenceID        string              `json:"reference_id"`
+	Amount             *PurchaseUnitAmount `json:"amount,omitempty"`
+	Payee              *PayeeForOrders     `json:"payee,omitempty"`
+	Payments           *CapturedPayments   `json:"payments,omitempty"`
+	PaymentInstruction *PaymentInstruction `json:"payment_instruction,omitempty"`
+	Description        string              `json:"description,omitempty"`
+	CustomID           string              `json:"custom_id,omitempty"`
+	InvoiceID          string              `json:"invoice_id,omitempty"`
+	ID                 string              `json:"id,omitempty"`
+	SoftDescriptor     string              `json:"soft_descriptor,omitempty"`
+	Shipping           *ShippingDetail     `json:"shipping,omitempty"`
+	Items              []Item              `json:"items,omitempty"`
+}
+
+// PayeeForOrders struct
+type PayeeForOrders struct {
+	EmailAddress string `json:"email_address,omitempty"`
+	MerchantID   string `json:"merchant_id,omitempty"`
+}
+
+// CapturedPayments has the amounts for a captured order
+type CapturedPayments struct {
+	Captures []CaptureAmount `json:"captures,omitempty"`
+}
+
+// https://developer.paypal.com/docs/api/payments/v2/#definition-payment_instruction
+type PaymentInstruction struct {
+	PlatformFees     []PlatformFee `json:"platform_fees,omitempty"`
+	DisbursementMode string        `json:"disbursement_mode,omitempty"`
+}
+
+// ShippingDetail struct
+type ShippingDetail struct {
+	Name    *Name                          `json:"name,omitempty"`
+	Address *ShippingDetailAddressPortable `json:"address,omitempty"`
+}
+
+// Name struct.
+// https://developer.paypal.com/docs/api/subscriptions/v1/#definition-name
+type Name struct {
+	FullName   string `json:"full_name,omitempty"`
+	Suffix     string `json:"suffix,omitempty"`
+	Prefix     string `json:"prefix,omitempty"`
+	GivenName  string `json:"given_name,omitempty"`
+	Surname    string `json:"surname,omitempty"`
+	MiddleName string `json:"middle_name,omitempty"`
+}
+
+// CaptureAmount struct
+type CaptureAmount struct {
+	ID                        string                     `json:"id,omitempty"`
+	CustomID                  string                     `json:"custom_id,omitempty"`
+	Amount                    *PurchaseUnitAmount        `json:"amount,omitempty"`
+	SellerProtection          *SellerProtection          `json:"seller_protection,omitempty"`
+	SellerReceivableBreakdown *SellerReceivableBreakdown `json:"seller_receivable_breakdown,omitempty"`
+}
+
+// SellerReceivableBreakdown has the detailed breakdown of the capture activity.
+type SellerReceivableBreakdown struct {
+	GrossAmount                   *Money        `json:"gross_amount,omitempty"`
+	PaypalFee                     *Money        `json:"paypal_fee,omitempty"`
+	PaypalFeeInReceivableCurrency *Money        `json:"paypal_fee_in_receivable_currency,omitempty"`
+	NetAmount                     *Money        `json:"net_amount,omitempty"`
+	ReceivableAmount              *Money        `json:"receivable_amount,omitempty"`
+	ExchangeRate                  *ExchangeRate `json:"exchange_rate,omitempty"`
+	PlatformFees                  []PlatformFee `json:"platform_fees,omitempty"`
+}
+
+// ExchangeRate struct.
+// https://developer.paypal.com/docs/api/orders/v2/#definition-exchange_rate
+type ExchangeRate struct {
+	SourceCurrency string `json:"source_currency"`
+	TargetCurrency string `json:"target_currency"`
+	Value          string `json:"value"`
+}
+
+// PlatformFee struct.
+// https://developer.paypal.com/docs/api/payments/v2/#definition-platform_fee
+type PlatformFee struct {
+	Amount *Money          `json:"amount,omitempty"`
+	Payee  *PayeeForOrders `json:"payee,omitempty"`
+}
+
+// Item struct
+type Item struct {
+	Name        string `json:"name"`
+	UnitAmount  *Money `json:"unit_amount,omitempty"`
+	Tax         *Money `json:"tax,omitempty"`
+	Quantity    string `json:"quantity"`
+	Description string `json:"description,omitempty"`
+	SKU         string `json:"sku,omitempty"`
+	Category    string `json:"category,omitempty"`
+}
+
+// PurchaseUnitRequest struct
+type PurchaseUnitRequest struct {
+	ReferenceID        string              `json:"reference_id,omitempty"`
+	Amount             *PurchaseUnitAmount `json:"amount"`
+	Payee              *PayeeForOrders     `json:"payee,omitempty"`
+	Description        string              `json:"description,omitempty"`
+	CustomID           string              `json:"custom_id,omitempty"`
+	InvoiceID          string              `json:"invoice_id,omitempty"`
+	SoftDescriptor     string              `json:"soft_descriptor,omitempty"`
+	Items              []Item              `json:"items,omitempty"`
+	Shipping           *ShippingDetail     `json:"shipping,omitempty"`
+	PaymentInstruction *PaymentInstruction `json:"payment_instruction,omitempty"`
+}
+
+// CreateOrderPayer used with create order requests
+type CreateOrderPayer struct {
+	Name         *CreateOrderPayerName          `json:"name,omitempty"`
+	EmailAddress string                         `json:"email_address,omitempty"`
+	PayerID      string                         `json:"payer_id,omitempty"`
+	Phone        *PhoneWithType                 `json:"phone,omitempty"`
+	BirthDate    string                         `json:"birth_date,omitempty"`
+	TaxInfo      *TaxInfo                       `json:"tax_info,omitempty"`
+	Address      *ShippingDetailAddressPortable `json:"address,omitempty"`
+}
+
+// ApplicationContext struct
+type ApplicationContext struct {
+	BrandName          string             `json:"brand_name,omitempty"`
+	Locale             string             `json:"locale,omitempty"`
+	ShippingPreference ShippingPreference `json:"shipping_preference,omitempty"`
+	UserAction         UserAction         `json:"user_action,omitempty"`
+	ReturnURL          string             `json:"return_url,omitempty"`
+	CancelURL          string             `json:"cancel_url,omitempty"`
+}
+
+// AuthorizeOrderRequest struct.
+// https://developer.paypal.com/docs/api/orders/v2/#orders_authorize
+type AuthorizeOrderRequest struct {
+	PaymentSource      *PaymentSource     `json:"payment_source,omitempty"`
+	ApplicationContext ApplicationContext `json:"application_context,omitempty"`
+}
+
+// PaymentSource structure
+type PaymentSource struct {
+	Card  *PaymentSourceCard  `json:"card,omitempty"`
+	Token *PaymentSourceToken `json:"token,omitempty"`
+}
+
+// PaymentSourceCard struct
+type PaymentSourceCard struct {
+	ID             string              `json:"id"`
+	Name           string              `json:"name"`
+	Number         string              `json:"number"`
+	Expiry         string              `json:"expiry"`
+	SecurityCode   string              `json:"security_code"`
+	LastDigits     string              `json:"last_digits"`
+	CardType       string              `json:"card_type"`
+	BillingAddress *CardBillingAddress `json:"billing_address"`
+}
+
+// CardBillingAddress struct
+type CardBillingAddress struct {
+	AddressLine1 string `json:"address_line_1"`
+	AddressLine2 string `json:"address_line_2"`
+	AdminArea2   string `json:"admin_area_2"`
+	AdminArea1   string `json:"admin_area_1"`
+	PostalCode   string `json:"postal_code"`
+	CountryCode  string `json:"country_code"`
+}
+
+// PaymentSourceToken struct
+type PaymentSourceToken struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
+}
+
+// CaptureOrderRequest.
+// https://developer.paypal.com/docs/api/orders/v2/#orders_capture
+type CaptureOrderRequest struct {
+	PaymentSource *PaymentSource `json:"payment_source"`
+}
+
+// CaptureOrderResponse is the response for capture order
+type CaptureOrderResponse struct {
+	ID            string                 `json:"id,omitempty"`
+	Status        string                 `json:"status,omitempty"`
+	Payer         *PayerWithNameAndPhone `json:"payer,omitempty"`
+	Address       *Address               `json:"address,omitempty"`
+	PurchaseUnits []CapturedPurchaseUnit `json:"purchase_units,omitempty"`
+}
+
+// CapturedPurchaseUnit are purchase units for a captured order
+type CapturedPurchaseUnit struct {
+	Items       []CapturedPurchaseItem       `json:"items,omitempty"`
+	ReferenceID string                       `json:"reference_id"`
+	Shipping    CapturedPurchaseUnitShipping `json:"shipping,omitempty"`
+	Payments    *CapturedPayments            `json:"payments,omitempty"`
+}
+
+// CapturedPurchaseItem are items for a captured order
+type CapturedPurchaseItem struct {
+	Quantity    string `json:"quantity"`
+	Name        string `json:"name"`
+	SKU         string `json:"sku,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// CapturedPurchaseUnitShipping struct
+type CapturedPurchaseUnitShipping struct {
+	Address ShippingDetailAddressPortable `json:"address,omitempty"`
 }

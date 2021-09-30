@@ -53,3 +53,11 @@
 * PATCH /v1/vault/credit-cards/:id
 * GET /v1/vault/credit-cards/:id
 * GET /v1/vault/credit-cards
+
+### Checkout v2
+
+* POST /v2/checkout/orders
+* GET /v2/checkout/orders/:id
+* PATCH /v2/checkout/orders/:id
+* POST /v2/checkout/orders/:id/authorize
+* POST /v2/checkout/orders/:id/capture
