@@ -41,3 +41,7 @@
 * GET /v1/payment-experience/web-profiles/:id
 * PUT /v1/payment-experience/web-profiles/:id
 * DELETE /v1/payment-experience/web-profiles/:id
+
+### Reporting v1
+
+* POST /v1/reporting/transactions
