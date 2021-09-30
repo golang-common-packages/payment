@@ -930,3 +930,46 @@ type CapturedPurchaseItem struct {
 type CapturedPurchaseUnitShipping struct {
 	Address ShippingDetailAddressPortable `json:"address,omitempty"`
 }
+
+// CreateWebhookRequest struct
+type CreateWebhookRequest struct {
+	URL        string             `json:"url"`
+	EventTypes []WebhookEventType `json:"event_types"`
+}
+
+// WebhookEventType struct
+type WebhookEventType struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Status      string `json:"status,omitempty"`
+}
+
+// ListWebhookResponse struct
+type ListWebhookResponse struct {
+	Webhooks []Webhook `json:"webhooks"`
+}
+
+// Webhook struct
+type Webhook struct {
+	ID         string             `json:"id"`
+	URL        string             `json:"url"`
+	EventTypes []WebhookEventType `json:"event_types"`
+	Links      []Link             `json:"links"`
+}
+
+// WebhookField struct
+type WebhookField struct {
+	Operation string      `json:"op"`
+	Path      string      `json:"path"`
+	Value     interface{} `json:"value"`
+}
+
+// VerifyWebhookResponse struct
+type VerifyWebhookResponse struct {
+	VerificationStatus string `json:"verification_status,omitempty"`
+}
+
+// WebhookEventTypesResponse struct
+type WebhookEventTypesResponse struct {
+	EventTypes []WebhookEventType `json:"event_types"`
+}

@@ -61,3 +61,11 @@
 * PATCH /v2/checkout/orders/:id
 * POST /v2/checkout/orders/:id/authorize
 * POST /v2/checkout/orders/:id/capture
+
+### Notification v2
+* POST /v1/notifications/webhooks
+* GET /v1/notifications/webhooks
+* GET /v1/notifications/webhooks/:id
+* PATCH /v1/notifications/webhooks/:id
+* DELETE /v1/notifications/webhooks/:id
+* POST /v1/notifications/verify-webhook-signature
