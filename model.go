@@ -490,4 +490,38 @@ type UserInfo struct {
 	PayerID         string   `json:"payer_id,omitempty"`
 }
 
+// WebProfile represents the configuration of the payment web payment experience.
+// https://developer.paypal.com/docs/api/payment-experience/
+type WebProfile struct {
+	ID           string       `json:"id,omitempty"`
+	Name         string       `json:"name"`
+	Presentation Presentation `json:"presentation,omitempty"`
+	InputFields  InputFields  `json:"input_fields,omitempty"`
+	FlowConfig   FlowConfig   `json:"flow_config,omitempty"`
+}
+
+// Presentation represents the branding and locale that a customer sees on redirect payments.
+// https://developer.paypal.com/docs/api/payment-experience/#definition-presentation
+type Presentation struct {
+	BrandName  string `json:"brand_name,omitempty"`
+	LogoImage  string `json:"logo_image,omitempty"`
+	LocaleCode string `json:"locale_code,omitempty"`
+}
+
+// InputFields represents the fields that are displayed to a customer on redirect payments.
+// https://developer.paypal.com/docs/api/payment-experience/#definition-input_fields
+type InputFields struct {
+	AllowNote       bool `json:"allow_note,omitempty"`
+	NoShipping      uint `json:"no_shipping,omitempty"`
+	AddressOverride uint `json:"address_override,omitempty"`
+}
+
+// FlowConfig represents the general behaviour of redirect payment pages.
+// https://developer.paypal.com/docs/api/payment-experience/#definition-flow_config
+type FlowConfig struct {
+	LandingPageType   string `json:"landing_page_type,omitempty"`
+	BankTXNPendingURL string `json:"bank_txn_pending_url,omitempty"`
+	UserAction        string `json:"user_action,omitempty"`
+}
+
 // End PayPal Models //

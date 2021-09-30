@@ -29,6 +29,15 @@
 * GET /v2/payments/captures/:id
 * GET /v2/payments/refund/:id
 
-### Identity v1
+### OpenID identity v1
+
 * GET /v1/identity/openidconnect/userinfo/?schema=:schema
 * POST /v1/identity/openidconnect/tokenservice (oauth or refresh token)
+
+### Payment experience v1
+
+* GET /v1/payment-experience/web-profiles
+* POST /v1/payment-experience/web-profiles
+* GET /v1/payment-experience/web-profiles/:id
+* PUT /v1/payment-experience/web-profiles/:id
+* DELETE /v1/payment-experience/web-profiles/:id
