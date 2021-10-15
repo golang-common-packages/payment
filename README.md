@@ -62,10 +62,18 @@
 * POST /v2/checkout/orders/:id/authorize
 * POST /v2/checkout/orders/:id/capture
 
-### Notification v2
+### Notification v1
+
 * POST /v1/notifications/webhooks
 * GET /v1/notifications/webhooks
 * GET /v1/notifications/webhooks/:id
 * PATCH /v1/notifications/webhooks/:id
 * DELETE /v1/notifications/webhooks/:id
 * POST /v1/notifications/verify-webhook-signature
+
+### Catalog v1 (Product)
+
+* POST /v1/catalogs/products
+* PATCH /v1/catalogs/products/:id
+* GET /v1/catalogs/products/:id
+* GET /v1/catalogs/products

@@ -1045,3 +1045,63 @@ func (c *PayPalClient) GetWebhookEventTypes(ctx context.Context) (*WebhookEventT
 	err = c.SendWithAuth(req, resp)
 	return resp, err
 }
+
+// CreateProduct creates a product
+// Doc: https://developer.paypal.com/docs/api/catalog-products/v1/#products_create
+// Endpoint: POST /v1/catalogs/products
+func (c *PayPalClient) CreateProduct(ctx context.Context, product Product) (*CreateProductResponse, error) {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.APIBase, "/v1/catalogs/products"), product)
+	response := &CreateProductResponse{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// UpdateProduct. updates a product information
+// Doc: https://developer.paypal.com/docs/api/catalog-products/v1/#products_patch
+// Endpoint: PATCH /v1/catalogs/products/:product_id
+func (c *PayPalClient) UpdateProduct(ctx context.Context, product Product) error {
+	req, err := c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("%s%s%s", c.APIBase, "/v1/catalogs/products/", product.ID), product.GetUpdatePatch())
+	if err != nil {
+		return err
+	}
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// Get product details
+// Doc: https://developer.paypal.com/docs/api/catalog-products/v1/#products_get
+// Endpoint: GET /v1/catalogs/products/:product_id
+func (c *PayPalClient) GetProduct(ctx context.Context, productId string) (*Product, error) {
+	req, err := c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("%s%s%s", c.APIBase, "/v1/catalogs/products/", productId), nil)
+	response := &Product{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// List all products
+// Doc: https://developer.paypal.com/docs/api/catalog-products/v1/#products_list
+// Endpoint: GET /v1/catalogs/products
+func (c *PayPalClient) ListProducts(ctx context.Context, params *ProductListParameters) (*ListProductsResponse, error) {
+	req, err := c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("%s%s", c.APIBase, "/v1/catalogs/products"), nil)
+	response := &ListProductsResponse{}
+	if err != nil {
+		return response, err
+	}
+
+	if params != nil {
+		q := req.URL.Query()
+		q.Add("page", params.Page)
+		q.Add("page_size", params.PageSize)
+		q.Add("total_required", params.TotalRequired)
+		req.URL.RawQuery = q.Encode()
+	}
+
+	err = c.SendWithAuth(req, response)
+	return response, err
+}

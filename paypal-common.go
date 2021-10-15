@@ -141,3 +141,29 @@ func (c *PayPalClient) log(r *http.Request, resp *http.Response) {
 func (r *ErrorResponse) Error() string {
 	return fmt.Sprintf("%v %v: %d %s, %+v", r.Response.Request.Method, r.Response.Request.URL, r.Response.StatusCode, r.Message, r.Details)
 }
+
+// GetUpdatePatch for catalog (product)
+func (product *Product) GetUpdatePatch() []Patch {
+	return []Patch{
+		{
+			Operation: "replace",
+			Path:      "/description",
+			Value:     product.Description,
+		},
+		{
+			Operation: "replace",
+			Path:      "/category",
+			Value:     product.Category,
+		},
+		{
+			Operation: "replace",
+			Path:      "/image_url",
+			Value:     product.ImageUrl,
+		},
+		{
+			Operation: "replace",
+			Path:      "/home_url",
+			Value:     product.HomeUrl,
+		},
+	}
+}

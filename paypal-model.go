@@ -17,6 +17,11 @@ type UserAction string
 // JSONTime overrides MarshalJson method to format in ISO8601
 type JSONTime time.Time
 
+//Doc: https://developer.paypal.com/docs/api/catalog-products/v1/#definition-product_category
+type ProductCategory string
+
+type ProductType string
+
 // TokenResponse is for API response for the /oauth2/token endpoint
 type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
@@ -972,4 +977,34 @@ type VerifyWebhookResponse struct {
 // WebhookEventTypesResponse struct
 type WebhookEventTypesResponse struct {
 	EventTypes []WebhookEventType `json:"event_types"`
+}
+
+type Product struct {
+	ID          string          `json:"id,omitempty"`
+	Name        string          `json:"name"`
+	Description string          `json:"description,omitempty"`
+	Category    ProductCategory `json:"category,omitempty"`
+	Type        ProductType     `json:"type"`
+	ImageUrl    string          `json:"image_url,omitempty"`
+	HomeUrl     string          `json:"home_url,omitempty"`
+}
+
+type CreateProductResponse struct {
+	Product
+	SharedResponse
+}
+
+type SharedResponse struct {
+	CreateTime string `json:"create_time"`
+	UpdateTime string `json:"update_time"`
+	Links      []Link `json:"links"`
+}
+
+type ListProductsResponse struct {
+	Products []Product `json:"products"`
+	SharedListResponse
+}
+
+type ProductListParameters struct {
+	ListParams
 }
