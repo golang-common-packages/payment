@@ -59,6 +59,7 @@ type ErrorResponse struct {
 type ErrorResponseDetail struct {
 	Field string `json:"field"`
 	Issue string `json:"issue"`
+	Links []Link `json:"link"`
 }
 
 // Payout struct
@@ -1184,4 +1185,25 @@ type SubscriptionDetails struct {
 	SubscriptionStatus           SubscriptionStatus `json:"status,omitempty"`
 	SubscriptionStatusChangeNote string             `json:"status_change_note,omitempty"`
 	StatusUpdateTime             time.Time          `json:"status_update_time,omitempty"`
+}
+
+// PaymentPatch for unit-test
+type PaymentPatch struct {
+	Operation string      `json:"op"`
+	Path      string      `json:"path"`
+	Value     interface{} `json:"value"`
+}
+
+// BillingAgreementToken response struct
+type BillingAgreementToken struct {
+	Links   []Link `json:"links,omitempty"`
+	TokenID string `json:"token_id,omitempty"`
+}
+
+type BillingAgreementFromToken struct {
+	ID          string      `json:"id,omitempty"`
+	Description string      `json:"description,omitempty"`
+	Payer       *Payer      `json:"payer,omitempty"`
+	Plan        BillingPlan `json:"plan,omitempty"`
+	Links       []Link      `json:"links,omitempty"`
 }

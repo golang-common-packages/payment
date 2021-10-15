@@ -2,6 +2,11 @@
 
 ## PayPal
 
+### Unit test
+```go
+go test -v -cover -covermode=atomic ./...
+```
+
 ### Auth v1
 
 * POST /v1/oauth2/token
