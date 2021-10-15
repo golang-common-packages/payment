@@ -217,12 +217,12 @@ func (subPlan *SubscriptionPlan) GetUpdatePatch() []Patch {
 }
 
 // GetUpdatePatch for billing subscription
-func (self *Subscription) GetUpdatePatch() []Patch {
+func (sub *Subscription) GetUpdatePatch() []Patch {
 	result := []Patch{
 		{
 			Operation: "replace",
 			Path:      "/billing_info/outstanding_balance",
-			Value:     self.BillingInfo.OutstandingBalance,
+			Value:     sub.BillingInfo.OutstandingBalance,
 		},
 	}
 	return result
