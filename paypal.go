@@ -68,6 +68,26 @@ type IPayPal interface {
 	DeleteWebhook(ctx context.Context, webhookID string) error
 	VerifyWebhookSignature(ctx context.Context, httpReq *http.Request, webhookID string) (*VerifyWebhookResponse, error)
 	GetWebhookEventTypes(ctx context.Context) (*WebhookEventTypesResponse, error)
+	CreateProduct(ctx context.Context, product Product) (*CreateProductResponse, error)
+	UpdateProduct(ctx context.Context, product Product) error
+	GetProduct(ctx context.Context, productId string) (*Product, error)
+	ListProducts(ctx context.Context, params *ProductListParameters) (*ListProductsResponse, error)
+	CreateSubscriptionPlan(ctx context.Context, newPlan SubscriptionPlan) (*CreateSubscriptionPlanResponse, error)
+	UpdateSubscriptionPlan(ctx context.Context, updatedPlan SubscriptionPlan) error
+	GetSubscriptionPlan(ctx context.Context, planId string) (*SubscriptionPlan, error)
+	ListSubscriptionPlans(ctx context.Context, params *SubscriptionPlanListParameters) (*ListSubscriptionPlansResponse, error)
+	ActivateSubscriptionPlan(ctx context.Context, planId string) error
+	DeactivateSubscriptionPlans(ctx context.Context, planId string) error
+	UpdateSubscriptionPlanPricing(ctx context.Context, planId string, pricingSchemes []PricingSchemeUpdate) error
+	CreateSubscription(ctx context.Context, newSubscription SubscriptionBase) (*SubscriptionDetailResp, error)
+	UpdateSubscription(ctx context.Context, updatedSubscription Subscription) error
+	GetSubscriptionDetails(ctx context.Context, subscriptionID string) (*SubscriptionDetailResp, error)
+	ActivateSubscription(ctx context.Context, subscriptionId, activateReason string) error
+	CancelSubscription(ctx context.Context, subscriptionId, cancelReason string) error
+	CaptureSubscription(ctx context.Context, subscriptionId string, request CaptureReqeust) (*SubscriptionCaptureResponse, error)
+	SuspendSubscription(ctx context.Context, subscriptionId, reason string) error
+	GetSubscriptionTransactions(ctx context.Context, requestParams SubscriptionTransactionsParams) (*SubscriptionTransactionsResponse, error)
+	ReviseSubscription(ctx context.Context, subscriptionId string, reviseSubscription SubscriptionBase) (*SubscriptionDetailResp, error)
 }
 
 // PayPalClient represents a Paypal REST API Client
