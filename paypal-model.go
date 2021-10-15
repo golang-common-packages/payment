@@ -22,6 +22,14 @@ type ProductCategory string
 
 type ProductType string
 
+type SubscriptionPlanStatus string
+
+type IntervalUnit string
+
+type TenureType string
+
+type SetupFeeFailureAction string
+
 // TokenResponse is for API response for the /oauth2/token endpoint
 type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
@@ -1007,4 +1015,75 @@ type ListProductsResponse struct {
 
 type ProductListParameters struct {
 	ListParams
+}
+
+type SubscriptionPlan struct {
+	ID                 string                 `json:"id,omitempty"`
+	ProductId          string                 `json:"product_id"`
+	Name               string                 `json:"name"`
+	Status             SubscriptionPlanStatus `json:"status"`
+	Description        string                 `json:"description,omitempty"`
+	BillingCycles      []BillingCycle         `json:"billing_cycles"`
+	PaymentPreferences *PaymentPreferences    `json:"payment_preferences"`
+	Taxes              *Taxes                 `json:"taxes"`
+	QuantitySupported  bool                   `json:"quantity_supported"` //Indicates whether you can subscribe to this plan by providing a quantity for the goods or service.
+}
+
+// Doc https://developer.paypal.com/docs/api/subscriptions/v1/#definition-billing_cycle
+type BillingCycle struct {
+	PricingScheme PricingScheme `json:"pricing_scheme"` // The active pricing scheme for this billing cycle. A free trial billing cycle does not require a pricing scheme.
+	Frequency     Frequency     `json:"frequency"`      // The frequency details for this billing cycle.
+	TenureType    TenureType    `json:"tenure_type"`    // The tenure type of the billing cycle. In case of a plan having trial cycle, only 2 trial cycles are allowed per plan. The possible values are:
+	Sequence      int           `json:"sequence"`       // The order in which this cycle is to run among other billing cycles. For example, a trial billing cycle has a sequence of 1 while a regular billing cycle has a sequence of 2, so that trial cycle runs before the regular cycle.
+	TotalCycles   int           `json:"total_cycles"`   // The number of times this billing cycle gets executed. Trial billing cycles can only be executed a finite number of times (value between 1 and 999 for total_cycles). Regular billing cycles can be executed infinite times (value of 0 for total_cycles) or a finite number of times (value between 1 and 999 for total_cycles).
+}
+
+type PricingScheme struct {
+	Version    int       `json:"version"`
+	FixedPrice Money     `json:"fixed_price"`
+	CreateTime time.Time `json:"create_time"`
+	UpdateTime time.Time `json:"update_time"`
+}
+
+//doc: https://developer.paypal.com/docs/api/subscriptions/v1/#definition-frequency
+type Frequency struct {
+	IntervalUnit  IntervalUnit `json:"interval_unit"`
+	IntervalCount int          `json:"interval_count"` //different per unit. check documentation
+}
+
+type PaymentPreferences struct {
+	AutoBillOutstanding     bool                  `json:"auto_bill_outstanding"`
+	SetupFee                *Money                `json:"setup_fee"`
+	SetupFeeFailureAction   SetupFeeFailureAction `json:"setup_fee_failure_action"`
+	PaymentFailureThreshold int                   `json:"payment_failure_threshold"`
+}
+
+type Taxes struct {
+	Percentage string `json:"percentage"`
+	Inclusive  bool   `json:"inclusive"`
+}
+
+type CreateSubscriptionPlanResponse struct {
+	SubscriptionPlan
+	SharedResponse
+}
+
+type SubscriptionPlanListParameters struct {
+	ProductId string `json:"product_id"`
+	PlanIds   string `json:"plan_ids"` // Filters the response by list of plan IDs. Filter supports upto 10 plan IDs.
+	ListParams
+}
+
+type ListSubscriptionPlansResponse struct {
+	Plans []SubscriptionPlan `json:"plans"`
+	SharedListResponse
+}
+
+type PricingSchemeUpdate struct {
+	BillingCycleSequence int           `json:"billing_cycle_sequence"`
+	PricingScheme        PricingScheme `json:"pricing_scheme"`
+}
+
+type PricingSchemeUpdateRequest struct {
+	Schemes []PricingSchemeUpdate `json:"pricing_schemes"`
 }

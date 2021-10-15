@@ -167,3 +167,51 @@ func (product *Product) GetUpdatePatch() []Patch {
 		},
 	}
 }
+
+// GetUpdatePatch for billing plan (Subscription)
+func (subPlan *SubscriptionPlan) GetUpdatePatch() []Patch {
+	result := []Patch{
+		{
+			Operation: "replace",
+			Path:      "/description",
+			Value:     subPlan.Description,
+		},
+	}
+
+	if subPlan.Taxes != nil {
+		result = append(result, Patch{
+			Operation: "replace",
+			Path:      "/taxes/percentage",
+			Value:     subPlan.Taxes.Percentage,
+		})
+	}
+
+	if subPlan.PaymentPreferences != nil {
+		if subPlan.PaymentPreferences.SetupFee != nil {
+			result = append(result, Patch{
+				Operation: "replace",
+				Path:      "/payment_preferences/setup_fee",
+				Value:     subPlan.PaymentPreferences.SetupFee,
+			},
+			)
+		}
+
+		result = append(result, []Patch{{
+			Operation: "replace",
+			Path:      "/payment_preferences/auto_bill_outstanding",
+			Value:     subPlan.PaymentPreferences.AutoBillOutstanding,
+		},
+			{
+				Operation: "replace",
+				Path:      "/payment_preferences/payment_failure_threshold",
+				Value:     subPlan.PaymentPreferences.PaymentFailureThreshold,
+			},
+			{
+				Operation: "replace",
+				Path:      "/payment_preferences/setup_fee_failure_action",
+				Value:     subPlan.PaymentPreferences.SetupFeeFailureAction,
+			}}...)
+	}
+
+	return result
+}

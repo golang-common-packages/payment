@@ -1105,3 +1105,106 @@ func (c *PayPalClient) ListProducts(ctx context.Context, params *ProductListPara
 	err = c.SendWithAuth(req, response)
 	return response, err
 }
+
+// CreateSubscriptionPlan creates a subscriptionPlan
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#plans_create
+// Endpoint: POST /v1/billing/plans
+func (c *PayPalClient) CreateSubscriptionPlan(ctx context.Context, newPlan SubscriptionPlan) (*CreateSubscriptionPlanResponse, error) {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.APIBase, "/v1/billing/plans"), newPlan)
+	response := &CreateSubscriptionPlanResponse{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// UpdateSubscriptionPlan. updates a plan
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#plans_patch
+// Endpoint: PATCH /v1/billing/plans/:plan_id
+func (c *PayPalClient) UpdateSubscriptionPlan(ctx context.Context, updatedPlan SubscriptionPlan) error {
+	req, err := c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("%s%s%s", c.APIBase, "/v1/billing/plans/", updatedPlan.ID), updatedPlan.GetUpdatePatch())
+	if err != nil {
+		return err
+	}
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// UpdateSubscriptionPlan. updates a plan
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#plans_get
+// Endpoint: GET /v1/billing/plans/:plan_id
+func (c *PayPalClient) GetSubscriptionPlan(ctx context.Context, planId string) (*SubscriptionPlan, error) {
+	req, err := c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("%s%s%s", c.APIBase, "/v1/billing/plans/", planId), nil)
+	response := &SubscriptionPlan{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// List all plans
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#plans_list
+// Endpoint: GET /v1/billing/plans
+func (c *PayPalClient) ListSubscriptionPlans(ctx context.Context, params *SubscriptionPlanListParameters) (*ListSubscriptionPlansResponse, error) {
+	req, err := c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("%s%s", c.APIBase, "/v1/billing/plans"), nil)
+	response := &ListSubscriptionPlansResponse{}
+	if err != nil {
+		return response, err
+	}
+
+	if params != nil {
+		q := req.URL.Query()
+		q.Add("page", params.Page)
+		q.Add("page_size", params.PageSize)
+		q.Add("total_required", params.TotalRequired)
+		q.Add("product_id", params.ProductId)
+		q.Add("plan_ids", params.PlanIds)
+		req.URL.RawQuery = q.Encode()
+	}
+
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// Activates a plan
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#plans_activate
+// Endpoint: POST /v1/billing/plans/{id}/activate
+func (c *PayPalClient) ActivateSubscriptionPlan(ctx context.Context, planId string) error {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/plans/%s/activate", c.APIBase, planId), nil)
+	if err != nil {
+		return err
+	}
+
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// Deactivates a plan
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#plans_deactivate
+// Endpoint: POST /v1/billing/plans/{id}/deactivate
+func (c *PayPalClient) DeactivateSubscriptionPlans(ctx context.Context, planId string) error {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/plans/%s/deactivate", c.APIBase, planId), nil)
+	if err != nil {
+		return err
+	}
+
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// Updates pricing for a plan. For example, you can update a regular billing cycle from $5 per month to $7 per month.
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#plans_update-pricing-schemes
+// Endpoint: POST /v1/billing/plans/{id}/update-pricing-schemes
+func (c *PayPalClient) UpdateSubscriptionPlanPricing(ctx context.Context, planId string, pricingSchemes []PricingSchemeUpdate) error {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/plans/%s/update-pricing-schemes", c.APIBase, planId), PricingSchemeUpdateRequest{
+		Schemes: pricingSchemes,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.SendWithAuth(req, nil)
+	return err
+}

@@ -77,3 +77,13 @@
 * PATCH /v1/catalogs/products/:id
 * GET /v1/catalogs/products/:id
 * GET /v1/catalogs/products
+
+### Billing Plan v1 (Subscription)
+
+* POST  /v1/billing/plans
+* PATCH /v1/billing/plans/:id
+* GET   /v1/billing/plans/:id
+* GET   /v1/billing/plans
+* POST  /v1/billing/plans/:id/activate
+* POST  /v1/billing/plans/:id/deactivate
+* POST  /v1/billing/plans/:id/update-pricing-schemes
