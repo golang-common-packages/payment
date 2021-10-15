@@ -78,7 +78,7 @@
 * GET /v1/catalogs/products/:id
 * GET /v1/catalogs/products
 
-### Billing Plan v1 (Subscription)
+### Billing Plan v1
 
 * POST  /v1/billing/plans
 * PATCH /v1/billing/plans/:id
@@ -87,3 +87,15 @@
 * POST  /v1/billing/plans/:id/activate
 * POST  /v1/billing/plans/:id/deactivate
 * POST  /v1/billing/plans/:id/update-pricing-schemes
+
+### Billing Subscription v1
+
+* POST /v1/billing/subscriptions
+* PATCH /v1/billing/subscriptions/:id
+* GET /v1/billing/subscriptions/:id
+* POST /v1/billing/subscriptions/:id/activate
+* POST /v1/billing/subscriptions/:id/cancel
+* POST /v1/billing/subscriptions/:id/revise
+* POST /v1/billing/subscriptions/:id/capture
+* POST /v1/billing/subscriptions/:id/suspend
+* GET /v1/billing/subscriptions/:id/transactions

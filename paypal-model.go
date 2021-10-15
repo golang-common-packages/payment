@@ -30,6 +30,12 @@ type TenureType string
 
 type SetupFeeFailureAction string
 
+type CaptureType string
+
+type SubscriptionTransactionStatus string
+
+type SubscriptionStatus string
+
 // TokenResponse is for API response for the /oauth2/token endpoint
 type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
@@ -1086,4 +1092,96 @@ type PricingSchemeUpdate struct {
 
 type PricingSchemeUpdateRequest struct {
 	Schemes []PricingSchemeUpdate `json:"pricing_schemes"`
+}
+
+type SubscriptionBase struct {
+	PlanID             string              `json:"plan_id"`
+	StartTime          *JSONTime           `json:"start_time,omitempty"`
+	EffectiveTime      *JSONTime           `json:"effective_time,omitempty"`
+	Quantity           string              `json:"quantity,omitempty"`
+	ShippingAmount     *Money              `json:"shipping_amount,omitempty"`
+	Subscriber         *Subscriber         `json:"subscriber,omitempty"`
+	AutoRenewal        bool                `json:"auto_renewal,omitempty"`
+	ApplicationContext *ApplicationContext `json:"application_context,omitempty"`
+	CustomID           string              `json:"custom_id,omitempty"`
+}
+
+type Subscriber struct {
+	ShippingAddress ShippingDetail       `json:"shipping_address,omitempty"`
+	Name            CreateOrderPayerName `json:"name,omitempty"`
+	EmailAddress    string               `json:"email_address,omitempty"`
+}
+
+type Subscription struct {
+	SubscriptionDetailResp
+}
+
+type SubscriptionDetailResp struct {
+	SubscriptionBase
+	SubscriptionDetails
+	BillingInfo BillingInfo `json:"billing_info,omitempty"` // not found in documentation
+	SharedResponse
+}
+
+type BillingInfo struct {
+	OutstandingBalance  AmountPayout      `json:"outstanding_balance,omitempty"`
+	CycleExecutions     []CycleExecutions `json:"cycle_executions,omitempty"`
+	LastPayment         LastPayment       `json:"last_payment,omitempty"`
+	NextBillingTime     time.Time         `json:"next_billing_time,omitempty"`
+	FailedPaymentsCount int               `json:"failed_payments_count,omitempty"`
+}
+
+type CycleExecutions struct {
+	TenureType      string `json:"tenure_type,omitempty"`
+	Sequence        int    `json:"sequence,omitempty"`
+	CyclesCompleted int    `json:"cycles_completed,omitempty"`
+	CyclesRemaining int    `json:"cycles_remaining,omitempty"`
+	TotalCycles     int    `json:"total_cycles,omitempty"`
+}
+
+type LastPayment struct {
+	Amount Money     `json:"amount,omitempty"`
+	Time   time.Time `json:"time,omitempty"`
+}
+
+type CaptureReqeust struct {
+	Note        string      `json:"note"`
+	CaptureType CaptureType `json:"capture_type"`
+	Amount      Money       `json:"amount"`
+}
+
+type SubscriptionCaptureResponse struct {
+	Status              SubscriptionTransactionStatus `json:"status"`
+	Id                  string                        `json:"id"`
+	AmountWithBreakdown AmountWithBreakdown           `json:"amount_with_breakdown"`
+	PayerName           Name                          `json:"payer_name"`
+	PayerEmail          string                        `json:"payer_email"`
+	Time                time.Time                     `json:"time"`
+}
+
+//Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#definition-amount_with_breakdown
+type AmountWithBreakdown struct {
+	GrossAmount    Money `json:"gross_amount"`
+	FeeAmount      Money `json:"fee_amount"`
+	ShippingAmount Money `json:"shipping_amount"`
+	TaxAmount      Money `json:"tax_amount"`
+	NetAmount      Money `json:"net_amount"`
+}
+
+type SubscriptionTransactionsParams struct {
+	SubscriptionId string
+	StartTime      time.Time
+	EndTime        time.Time
+}
+
+type SubscriptionTransactionsResponse struct {
+	Transactions []SubscriptionCaptureResponse `json:"transactions"`
+	SharedListResponse
+}
+
+type SubscriptionDetails struct {
+	ID                           string             `json:"id,omitempty"`
+	SubscriptionStatus           SubscriptionStatus `json:"status,omitempty"`
+	SubscriptionStatusChangeNote string             `json:"status_change_note,omitempty"`
+	StatusUpdateTime             time.Time          `json:"status_update_time,omitempty"`
 }

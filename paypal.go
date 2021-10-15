@@ -1208,3 +1208,122 @@ func (c *PayPalClient) UpdateSubscriptionPlanPricing(ctx context.Context, planId
 	err = c.SendWithAuth(req, nil)
 	return err
 }
+
+// CreateSubscriptionPlan creates a subscriptionPlan
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_create
+// Endpoint: POST /v1/billing/subscriptions
+func (c *PayPalClient) CreateSubscription(ctx context.Context, newSubscription SubscriptionBase) (*SubscriptionDetailResp, error) {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.APIBase, "/v1/billing/subscriptions"), newSubscription)
+	req.Header.Add("Prefer", "return=representation")
+	response := &SubscriptionDetailResp{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// UpdateSubscriptionPlan. updates a plan
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_patch
+// Endpoint: PATCH /v1/billing/subscriptions/:subscription_id
+func (c *PayPalClient) UpdateSubscription(ctx context.Context, updatedSubscription Subscription) error {
+	req, err := c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("%s%s%s", c.APIBase, "/v1/billing/subscriptions/", updatedSubscription.ID), updatedSubscription.GetUpdatePatch())
+	if err != nil {
+		return err
+	}
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// GetSubscriptionDetails shows details for a subscription, by ID.
+// Endpoint: GET /v1/billing/subscriptions/
+func (c *PayPalClient) GetSubscriptionDetails(ctx context.Context, subscriptionID string) (*SubscriptionDetailResp, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/billing/subscriptions/%s", c.APIBase, subscriptionID), nil)
+	response := &SubscriptionDetailResp{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// Activates the subscription.
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_activate
+// Endpoint: POST /v1/billing/subscriptions/{id}/activate
+func (c *PayPalClient) ActivateSubscription(ctx context.Context, subscriptionId, activateReason string) error {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/subscriptions/%s/activate", c.APIBase, subscriptionId), map[string]string{"reason": activateReason})
+	if err != nil {
+		return err
+	}
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// Cancels the subscription.
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_cancel
+// Endpoint: POST /v1/billing/subscriptions/{id}/cancel
+func (c *PayPalClient) CancelSubscription(ctx context.Context, subscriptionId, cancelReason string) error {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/subscriptions/%s/cancel", c.APIBase, subscriptionId), map[string]string{"reason": cancelReason})
+	if err != nil {
+		return err
+	}
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// Captures an authorized payment from the subscriber on the subscription.
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_capture
+// Endpoint: POST /v1/billing/subscriptions/{id}/capture
+func (c *PayPalClient) CaptureSubscription(ctx context.Context, subscriptionId string, request CaptureReqeust) (*SubscriptionCaptureResponse, error) {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/subscriptions/%s/capture", c.APIBase, subscriptionId), request)
+	response := &SubscriptionCaptureResponse{}
+	if err != nil {
+		return response, err
+	}
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// Suspends the subscription.
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_suspend
+// Endpoint: POST /v1/billing/subscriptions/{id}/suspend
+func (c *PayPalClient) SuspendSubscription(ctx context.Context, subscriptionId, reason string) error {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/subscriptions/%s/suspend", c.APIBase, subscriptionId), map[string]string{"reason": reason})
+	if err != nil {
+		return err
+	}
+	err = c.SendWithAuth(req, nil)
+	return err
+}
+
+// Lists transactions for a subscription.
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_transactions
+// Endpoint: GET /v1/billing/subscriptions/{id}/transactions
+func (c *PayPalClient) GetSubscriptionTransactions(ctx context.Context, requestParams SubscriptionTransactionsParams) (*SubscriptionTransactionsResponse, error) {
+	startTime := requestParams.StartTime.Format("2006-01-02T15:04:05Z")
+	endTime := requestParams.EndTime.Format("2006-01-02T15:04:05Z")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/billing/subscriptions/%s/transactions?start_time=%s&end_time=%s", c.APIBase, requestParams.SubscriptionId, startTime, endTime), nil)
+	response := &SubscriptionTransactionsResponse{}
+	if err != nil {
+		return response, err
+	}
+
+	err = c.SendWithAuth(req, response)
+	return response, err
+}
+
+// Revise plan or quantity of subscription
+// Doc: https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions_revise
+// Endpoint: POST /v1/billing/subscriptions/{id}/revise
+func (c *PayPalClient) ReviseSubscription(ctx context.Context, subscriptionId string, reviseSubscription SubscriptionBase) (*SubscriptionDetailResp, error) {
+	req, err := c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("%s/v1/billing/subscriptions/%s/revise", c.APIBase, subscriptionId), reviseSubscription)
+	response := &SubscriptionDetailResp{}
+	if err != nil {
+		return response, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	err = c.SendWithAuth(req, response)
+
+	return response, err
+}
